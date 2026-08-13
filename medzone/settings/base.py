@@ -84,7 +84,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Indian/Antananarivo'        # ← correct for Madagascar
+TIME_ZONE = 'UTC'        # ← correct for Madagascar
 USE_I18N = True
 USE_TZ = True
 
