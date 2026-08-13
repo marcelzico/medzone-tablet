@@ -5,7 +5,7 @@ from docx.oxml.text.paragraph import CT_P
 from docx.table import Table
 from docx.text.paragraph import Paragraph
 from pptx import Presentation
-import fitz  # PyMuPDF
+# import fitz  # PyMuPDF
 from lecon.models import Chapter
 from .models import Copy, Importer
 import os
