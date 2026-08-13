@@ -36,4 +36,3 @@ xlsxwriter==3.2.9
 reportlab==4.4.9
 
 spacy==3.8.11
-fr_core_news_lg @ https://github.com/explosion/spacy-models/releases/download/fr_core_news_lg-3.8.0/fr_core_news_lg-3.8.0-py3-none-any.whl#sha256=da5bf7fc860af64293d88638b4416b3de3a29005b785bfff67d09b06c77345de
