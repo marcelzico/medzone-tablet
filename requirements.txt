@@ -7,7 +7,6 @@ fontawesomefree==6.6.0
 whitenoise==6.11.0
 python-decouple==3.8
 beautifulsoup4==4.14.3
-scikit-learn==1.8.0
 opencv-python==4.13.0.90
 pillow==12.1.0
 pdf2image==1.17.0
@@ -19,4 +18,4 @@ pypdfium2==5.8.0
 python-docx==1.2.0
 python-pptx==1.0.2
 xlsxwriter==3.2.9
-spacy==3.8.11
+
