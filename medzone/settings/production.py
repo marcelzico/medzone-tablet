@@ -1,7 +1,7 @@
 from .base import *
 from decouple import config
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 
@@ -18,7 +18,6 @@ X_FRAME_OPTIONS = 'DENY'
 
 # Database – Render/Railway give you DATABASE_URL automatically
 import dj_database_url
-DATABASES['default'] = dj_database_url.parse(config('DATABASE_URL'))
 
 # Email – real SMTP
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
