@@ -15,7 +15,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 import base64
-import PyPDF2
+# import PyPDF2
 from django.core.files.storage import FileSystemStorage
 from django.core.files.base import ContentFile
 import io
@@ -416,59 +416,59 @@ def get_pdf_data(request, document_id):
         }, status=500)
 
 
-@csrf_exempt
-@login_required
-def search_pdf(request, document_id):
-    """Search text in PDF"""
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
+# @csrf_exempt
+# @login_required
+# def search_pdf(request, document_id):
+#     """Search text in PDF"""
+#     if request.method != 'POST':
+#         return JsonResponse({'error': 'Method not allowed'}, status=405)
     
-    document = get_object_or_404(Importer, id=document_id, file_type='pdf')
+#     document = get_object_or_404(Importer, id=document_id, file_type='pdf')
     
-    try:
-        data = json.loads(request.body)
-        search_term = data.get('search_term', '').strip().lower()
+#     try:
+#         data = json.loads(request.body)
+#         search_term = data.get('search_term', '').strip().lower()
         
-        if not search_term:
-            return JsonResponse({'matches': []})
+#         if not search_term:
+#             return JsonResponse({'matches': []})
         
-        matches = []
+#         matches = []
         
-        # Check if file exists
-        if not os.path.exists(document.file.path):
-            return JsonResponse({'error': 'PDF file not found'}, status=404)
+#         # Check if file exists
+#         if not os.path.exists(document.file.path):
+#             return JsonResponse({'error': 'PDF file not found'}, status=404)
         
-        with open(document.file.path, 'rb') as f:
-            pdf_reader = PyPDF2.PdfReader(f)
+#         with open(document.file.path, 'rb') as f:
+#             pdf_reader = PyPDF2.PdfReader(f)
             
-            for page_num in range(len(pdf_reader.pages)):
-                page = pdf_reader.pages[page_num]
-                text = page.extract_text().lower()
+#             for page_num in range(len(pdf_reader.pages)):
+#                 page = pdf_reader.pages[page_num]
+#                 text = page.extract_text().lower()
                 
-                if search_term in text:
-                    # Count occurrences
-                    count = text.count(search_term)
+#                 if search_term in text:
+#                     # Count occurrences
+#                     count = text.count(search_term)
                     
-                    # Get context
-                    start_index = text.find(search_term)
-                    context_start = max(0, start_index - 50)
-                    context_end = min(len(text), start_index + len(search_term) + 50)
-                    context = text[context_start:context_end]
+#                     # Get context
+#                     start_index = text.find(search_term)
+#                     context_start = max(0, start_index - 50)
+#                     context_end = min(len(text), start_index + len(search_term) + 50)
+#                     context = text[context_start:context_end]
                     
-                    if context_start > 0:
-                        context = '...' + context
-                    if context_end < len(text):
-                        context = context + '...'
+#                     if context_start > 0:
+#                         context = '...' + context
+#                     if context_end < len(text):
+#                         context = context + '...'
                     
-                    matches.append({
-                        'page': page_num + 1,
-                        'context': context,
-                        'count': count
-                    })
+#                     matches.append({
+#                         'page': page_num + 1,
+#                         'context': context,
+#                         'count': count
+#                     })
         
-        return JsonResponse({'matches': matches})
+#         return JsonResponse({'matches': matches})
         
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+#     except Exception as e:
+#         return JsonResponse({'error': str(e)}, status=500)
 
 
