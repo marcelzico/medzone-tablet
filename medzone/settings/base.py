@@ -184,7 +184,7 @@ CRON_CLASSES = [
 
 
 # Base directory for bulk imports
-BULK_IMPORT_ROOT = '/root/medzone-documents'   # Change to your actual path
+BULK_IMPORT_ROOT = '/doc_5eme'   # Change to your actual path
 
 # Subfolder names (must match exactly)
 BULK_SPLITTED_DIR = 'splitted'
