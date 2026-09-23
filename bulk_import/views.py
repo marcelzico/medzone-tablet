@@ -51,28 +51,6 @@ def unite_list(request, level_name):
     })
 
 
-# ---------- Chapter list for a unite ----------
-# @login_required
-# @non_student_required
-# def chapter_list(request, unite_id):
-#     unite = get_object_or_404(Unite, id=unite_id)
-#     chapters = unite.chapters.all().order_by('order')
-
-#     # Annotate chapters
-#     for chapter in chapters:
-#         chapter.has_copies = Importer.objects.filter(chapter=chapter).exists()
-#         # Check if exercise folder exists and has files
-#         exercise_path = Path(settings.BULK_IMPORT_ROOT) / settings.BULK_EXERCICES_DIR / unite.level / unite.title / chapter.title
-#         chapter.has_exercise_files = exercise_path.exists() and any(exercise_path.iterdir())
-
-#     return render(request, 'bulk_import/chapter_list.html', {
-#         'unite': unite,
-#         'chapters': chapters,
-#     })
-
-
-
-
 @login_required
 @non_student_required
 def chapter_list(request, unite_id):

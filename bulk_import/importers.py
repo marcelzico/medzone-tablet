@@ -375,14 +375,15 @@ def import_exercises_for_chapter(chapter, user):
                 stats['mcq'] += cnt
                 stats['errors'].extend(errs)
             elif file_type == 'qa':
-                cnt, errs = process_qa_file(file_path, chapter, user)
-                stats['qa'] += cnt
-                stats['errors'].extend(errs)
+                # cnt, errs = process_qa_file(file_path, chapter, user)
+                # stats['qa'] += cnt
+                # stats['errors'].extend(errs)
 
 # temporarily used to avoid renaming all qa files 
                 cnt, errs = process_flashcard_file(file_path, chapter, user)
                 stats['flashcard'] += cnt
                 stats['errors'].extend(errs)
+                
             elif file_type == 'tf':
                 cnt, errs = process_tf_file(file_path, chapter, user)
                 stats['tf'] += cnt
@@ -395,7 +396,7 @@ def import_exercises_for_chapter(chapter, user):
                 cnt, errs = process_summary_file(file_path, chapter, user)
                 stats['summary'] += cnt
                 stats['errors'].extend(errs)
-            elif file_type == 'clinical':
+            elif file_type == 'clinical_case':
                 # cnt, errs = process_clinical_file(...)
                 # stats['clinical'] += cnt
                 # stats['errors'].extend(errs)
