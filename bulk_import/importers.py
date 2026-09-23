@@ -8,7 +8,7 @@ from lecon.models import Unite, Chapter as LessonChapter
 from lessoncopy.models import Copy, Importer
 from lessoncopy.utils import extract_docx_to_model
 from quizzes.models import MCQ, QuestionAnswer, TrueFalseQuiz
-# from quizlet_copy.models import FlashcardSet, Flashcard
+from quizlet_copy.models import FlashcardSet, Flashcard
 from .utils import (
     get_unite_folders, get_chapter_files_for_unite,
     get_shifted_files_for_chapter, get_exercise_files_for_chapter,
@@ -247,7 +247,7 @@ def process_mcq_file(file_path, chapter, user):
                         option2=row.get('option2', '').strip(),
                         option3=row.get('option3', '').strip() or None,
                         option4=row.get('option4', '').strip() or None,
-                        correct_option=int(row.get('correct') or row.get('answer')),
+                        correct_option=int(row.get('correct') or row.get('answer') or 1),
                         explanation=row.get('explanation') or row.get('explication') or '',
                         time_limit=60,
                     )
@@ -325,8 +325,8 @@ def process_flashcard_file(file_path, chapter, user):
                 try:
                     Flashcard.objects.create(
                         flashcard_set=flashcard_set,
-                        term=row.get('term', '').strip() or row.get('front', '').strip() or row.get('question', '').strip,
-                        definition=row.get('definition', '').strip() or row.get('meaning', '').strip() or row.get('back', '').strip() or row.get('answer','').strip(),
+                        term=row.get('term', '').strip() or row.get('front', '').strip,
+                        definition=row.get('definition', '') or row.get('meaning', '') or row.get('back', ''),
                     ) 
                     count += 1
                 except Exception as e:
@@ -353,13 +353,9 @@ def process_summary_file(file_path, chapter, user):
 def import_exercises_for_chapter(chapter, user):
     """Import all exercise files for a chapter."""
     stats = {
-        'mcq': 0, 
-        'qa': 0, 
-        'tf': 0,
-        'flashcard': 0,
-        # 'terminology': 0,
-        'summary': 0, 
-        #'clinical': 0,
+        'mcq': 0, 'qa': 0, 'tf': 0,
+        'flashcard': 0, 'terminology': 0,
+        'summary': 0, 'clinical': 0,
         'errors': []
     }
     try:
@@ -375,36 +371,25 @@ def import_exercises_for_chapter(chapter, user):
                 stats['mcq'] += cnt
                 stats['errors'].extend(errs)
             elif file_type == 'qa':
-                # cnt, errs = process_qa_file(file_path, chapter, user)
-                # stats['qa'] += cnt
-                # stats['errors'].extend(errs)
-
-# temporarily used to avoid renaming all qa files 
-                cnt, errs = process_flashcard_file(file_path, chapter, user)
-                stats['flashcard'] += cnt
+                cnt, errs = process_qa_file(file_path, chapter, user)
+                stats['qa'] += cnt
                 stats['errors'].extend(errs)
-                
             elif file_type == 'tf':
                 cnt, errs = process_tf_file(file_path, chapter, user)
                 stats['tf'] += cnt
                 stats['errors'].extend(errs)
-            # elif file_type == 'flashcard':
-            #     cnt, errs = process_flashcard_file(file_path, chapter, user)
-            #     stats['flashcard'] += cnt
-            #     stats['errors'].extend(errs)
+            elif file_type == 'flashcard':
+                cnt, errs = process_flashcard_file(file_path, chapter, user)
+                stats['flashcard'] += cnt
+                stats['errors'].extend(errs)
             elif file_type == 'summary':
                 cnt, errs = process_summary_file(file_path, chapter, user)
                 stats['summary'] += cnt
                 stats['errors'].extend(errs)
-            elif file_type == 'clinical_case':
-                # cnt, errs = process_clinical_file(...)
-                # stats['clinical'] += cnt
-                # stats['errors'].extend(errs)
-            
-# temporarily used to avoid renaming all qa files 
-                cnt, errs = process_summary_file(file_path, chapter, user)
-                stats['summary'] += cnt
-                stats['errors'].extend(errs)
+            # elif file_type == 'clinical':
+            #     cnt, errs = process_clinical_file(...)
+            #     stats['clinical'] += cnt
+            #     stats['errors'].extend(errs)
         except Exception as e:
             stats['errors'].append(f"Error processing {file_path.name}: {str(e)}")
     return stats
@@ -413,10 +398,8 @@ def import_exercises_for_chapter(chapter, user):
 def import_exercises_for_chapters_bulk(chapter_ids, user):
     aggregated = {
         'mcq': 0, 'qa': 0, 'tf': 0,
-        'flashcard': 0, 
-        'terminology': 0,
-        'summary': 0,
-         #'clinical': 0,
+        'flashcard': 0, 'terminology': 0,
+        'summary': 0, 'clinical': 0,
         'errors': []
     }
     for cid in chapter_ids:
@@ -427,9 +410,9 @@ def import_exercises_for_chapters_bulk(chapter_ids, user):
             aggregated['qa'] += stats.get('qa', 0)
             aggregated['tf'] += stats.get('tf', 0)
             aggregated['flashcard'] += stats.get('flashcard', 0)
-            # aggregated['terminology'] += stats.get('terminology', 0)
+            aggregated['terminology'] += stats.get('terminology', 0)
             aggregated['summary'] += stats.get('summary', 0)
-            # aggregated['clinical'] += stats.get('clinical', 0)
+            aggregated['clinical'] += stats.get('clinical', 0)
             aggregated['errors'].extend(stats.get('errors', []))
         except LessonChapter.DoesNotExist:
             aggregated['errors'].append(f"Chapter {cid} not found.")

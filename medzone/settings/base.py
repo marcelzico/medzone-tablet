@@ -185,9 +185,9 @@ CRON_CLASSES = [
 
 
 # Base directory for bulk imports
-BULK_IMPORT_ROOT = '../doc_5eme'   # Change to your actual path
+BULK_IMPORT_ROOT = '../revision-doc-serie'   # Change to your actual path
 
 # Subfolder names (must match exactly)
 BULK_SPLITTED_DIR = 'splitted'
-BULK_SHIFTED_DIR = 'shifted down'
+BULK_SHIFTED_DIR = 'splitted'
 BULK_EXERCICES_DIR = 'exercices'
