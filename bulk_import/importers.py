@@ -309,31 +309,31 @@ def process_tf_file(file_path, chapter, user):
     return count, errors
 
 
-# def process_flashcard_file(file_path, chapter, user):
-#     count = 0
-#     errors = []
-#     try:
-#         # Get or create a flashcard set for this chapter (public by default for staff)
-#         flashcard_set, created = FlashcardSet.objects.get_or_create(
-#             title=chapter,
-#             is_public=True,
-#             defaults={'created_by': user, 'description': ''}
-#         )
-#         with open(file_path, 'r', encoding='utf-8-sig') as f:
-#             reader = csv.DictReader(f)
-#             for row_num, row in enumerate(reader, start=2):
-#                 try:
-#                     Flashcard.objects.create(
-#                         flashcard_set=flashcard_set,
-#                         term=row.get('term', '').strip() or row.get('front', '').strip,
-#                         definition=row.get('definition', '') or row.get('meaning', '') or row.get('back', ''),
-#                     ) 
-#                     count += 1
-#                 except Exception as e:
-#                     errors.append(f"Ligne {row_num}: {str(e)}")
-#     except Exception as e:
-#         errors.append(f"Erreur lecture fichier: {str(e)}")
-#     return count, errors
+def process_flashcard_file(file_path, chapter, user):
+    count = 0
+    errors = []
+    try:
+        # Get or create a flashcard set for this chapter (public by default for staff)
+        flashcard_set, created = FlashcardSet.objects.get_or_create(
+            title=chapter,
+            is_public=True,
+            defaults={'created_by': user, 'description': ''}
+        )
+        with open(file_path, 'r', encoding='utf-8-sig') as f:
+            reader = csv.DictReader(f)
+            for row_num, row in enumerate(reader, start=2):
+                try:
+                    Flashcard.objects.create(
+                        flashcard_set=flashcard_set,
+                        term=row.get('term', '').strip() or row.get('front', '').strip() or row.get('question', '').strip,
+                        definition=row.get('definition', '').strip() or row.get('meaning', '').strip() or row.get('back', '').strip() or row.get('answer','').strip(),
+                    ) 
+                    count += 1
+                except Exception as e:
+                    errors.append(f"Ligne {row_num}: {str(e)}")
+    except Exception as e:
+        errors.append(f"Erreur lecture fichier: {str(e)}")
+    return count, errors
 
 
 def process_summary_file(file_path, chapter, user):
@@ -353,9 +353,13 @@ def process_summary_file(file_path, chapter, user):
 def import_exercises_for_chapter(chapter, user):
     """Import all exercise files for a chapter."""
     stats = {
-        'mcq': 0, 'qa': 0, 'tf': 0,
-        # 'flashcard': 0, 'terminology': 0,
-        'summary': 0, #'clinical': 0,
+        'mcq': 0, 
+        'qa': 0, 
+        'tf': 0,
+        'flashcard': 0,
+        # 'terminology': 0,
+        'summary': 0, 
+        #'clinical': 0,
         'errors': []
     }
     try:
@@ -374,6 +378,11 @@ def import_exercises_for_chapter(chapter, user):
                 cnt, errs = process_qa_file(file_path, chapter, user)
                 stats['qa'] += cnt
                 stats['errors'].extend(errs)
+
+# temporarily used to avoid renaming all qa files 
+                cnt, errs = process_flashcard_file(file_path, chapter, user)
+                stats['flashcard'] += cnt
+                stats['errors'].extend(errs)
             elif file_type == 'tf':
                 cnt, errs = process_tf_file(file_path, chapter, user)
                 stats['tf'] += cnt
@@ -386,10 +395,15 @@ def import_exercises_for_chapter(chapter, user):
                 cnt, errs = process_summary_file(file_path, chapter, user)
                 stats['summary'] += cnt
                 stats['errors'].extend(errs)
-            # elif file_type == 'clinical':
-            #     cnt, errs = process_clinical_file(...)
-            #     stats['clinical'] += cnt
-            #     stats['errors'].extend(errs)
+            elif file_type == 'clinical':
+                # cnt, errs = process_clinical_file(...)
+                # stats['clinical'] += cnt
+                # stats['errors'].extend(errs)
+            
+# temporarily used to avoid renaming all qa files 
+                cnt, errs = process_summary_file(file_path, chapter, user)
+                stats['summary'] += cnt
+                stats['errors'].extend(errs)
         except Exception as e:
             stats['errors'].append(f"Error processing {file_path.name}: {str(e)}")
     return stats
@@ -398,8 +412,10 @@ def import_exercises_for_chapter(chapter, user):
 def import_exercises_for_chapters_bulk(chapter_ids, user):
     aggregated = {
         'mcq': 0, 'qa': 0, 'tf': 0,
-        # 'flashcard': 0, 'terminology': 0,
-        'summary': 0, #'clinical': 0,
+        'flashcard': 0, 
+        'terminology': 0,
+        'summary': 0,
+         #'clinical': 0,
         'errors': []
     }
     for cid in chapter_ids:
@@ -409,7 +425,7 @@ def import_exercises_for_chapters_bulk(chapter_ids, user):
             aggregated['mcq'] += stats.get('mcq', 0)
             aggregated['qa'] += stats.get('qa', 0)
             aggregated['tf'] += stats.get('tf', 0)
-            # aggregated['flashcard'] += stats.get('flashcard', 0)
+            aggregated['flashcard'] += stats.get('flashcard', 0)
             # aggregated['terminology'] += stats.get('terminology', 0)
             aggregated['summary'] += stats.get('summary', 0)
             # aggregated['clinical'] += stats.get('clinical', 0)

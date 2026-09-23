@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'quizzes',
     'dashboard',
     'student',
+    'quizlet_copy',
     'subscriptions',
     'bulk_import',  # ← add this line for the bulk_import app
     

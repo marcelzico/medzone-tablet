@@ -60,6 +60,7 @@ urlpatterns = [
     path('note/', include('lessoncopy.urls', namespace='lessoncopy')),
     path('subscription/', include('subscriptions.urls')),
     path('student/', include('student.urls')),
+    path('card/', include('quizlet_copy.urls')),
     # path('teacher/', include('teacher.urls')),
     # Include bulk_import app URLs
     path('bulk-import/', include('bulk_import.urls', namespace='bulk_import')),
