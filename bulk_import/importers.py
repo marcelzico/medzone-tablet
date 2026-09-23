@@ -325,8 +325,8 @@ def process_flashcard_file(file_path, chapter, user):
                 try:
                     Flashcard.objects.create(
                         flashcard_set=flashcard_set,
-                        term=row.get('term', '').strip() or row.get('front', '').strip,
-                        definition=row.get('definition', '') or row.get('meaning', '') or row.get('back', ''),
+                        term=row.get('term', '').strip() or row.get('front', '').strip() or row.get('question', '').strip(),
+                        definition=row.get('definition', '') or row.get('meaning', '') or row.get('back', '') or row.get('answer', '')
                     ) 
                     count += 1
                 except Exception as e:
