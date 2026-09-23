@@ -1,0 +1,955 @@
+{% comment %} templates/quizlet/partials/write_mode.html - MOBILE FRIENDLY VERSION {% endcomment %}
+<div id="write-mode" class="write-mode-container">
+    <!-- Clean Header -->
+    <div class="text-center mb-4">
+        <div class="d-flex flex-column flex-md-row align-items-center justify-content-center mb-2">
+            <div class="write-icon rounded-circle bg-primary bg-opacity-10 p-2 p-md-3 mb-3 mb-md-0 me-md-3">
+                <i class="bi bi-pencil text-primary" style="font-size: 1.5rem; font-size: clamp(1.5rem, 4vw, 2rem);"></i>
+            </div>
+            <div class="text-center text-md-start">
+                <h2 class="fw-bold text-primary mb-1" style="font-size: clamp(1.25rem, 5vw, 1.75rem);">Write Mode</h2>
+                <p class="text-muted mb-0" style="font-size: clamp(0.875rem, 3vw, 1rem);">Type terms from memory</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="write-container" class="write-study-area">
+        <!-- Progress Indicator -->
+        <div class="progress-indicator mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <small class="text-muted" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">
+                    <i class="bi bi-card-text me-1"></i>
+                    Card <span id="write-position">1</span> of {{ cards|length }}
+                </small>
+                <div class="score-badge rounded-pill bg-success bg-opacity-10 px-2 px-md-3 py-1">
+                    <small class="text-success fw-semibold" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">
+                        <i class="bi bi-star me-1"></i>
+                        <span id="write-score">0</span> pts
+                    </small>
+                </div>
+            </div>
+            <div class="progress" style="height: 4px;">
+                <div id="write-progress-bar" class="progress-bar bg-success" 
+                     style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Definition Card -->
+        <div class="definition-card card border-0 shadow-sm mb-3 mb-md-4">
+            <div class="card-body p-3 p-md-4 text-center">
+                <div class="definition-header mb-2 mb-md-3">
+                    <h6 class="text-uppercase text-muted small mb-2" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">
+                        <i class="bi bi-lightbulb me-1"></i> Definition
+                    </h6>
+                </div>
+                <div id="write-definition" class="definition-content">
+                    {% if cards %}
+                    <p class="h3 h4-md fw-normal text-dark mb-0" style="font-size: clamp(1.1rem, 4vw, 1.5rem);">
+                        {{ cards.0.definition }}
+                    </p>
+                    {% else %}
+                    <p class="text-muted">No cards available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Answer Input Area -->
+        <div class="answer-area card border-0 shadow-sm mb-3 mb-md-4">
+            <div class="card-body p-3 p-md-4">
+                <div class="input-header mb-2 mb-md-3">
+                    <label for="write-answer" class="form-label text-muted small" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">
+                        <i class="bi bi-keyboard me-1"></i> Type the term below
+                    </label>
+                </div>
+                
+                <!-- Textarea for better mobile experience -->
+                <div class="answer-input-container">
+                    <textarea 
+                        id="write-answer" 
+                        class="form-control answer-textarea" 
+                        placeholder="Start typing your answer here..." 
+                        rows="3"
+                        autocomplete="off" 
+                        autofocus
+                        style="resize: vertical; min-height: 100px; max-height: 200px; font-size: clamp(1rem, 3.5vw, 1.1rem);"></textarea>
+                    
+                    <!-- Character counter -->
+                    <div class="character-counter text-end mt-1">
+                        <small class="text-muted" style="font-size: clamp(0.7rem, 2.2vw, 0.8rem);">
+                            <span id="char-count">0</span> characters
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- Check Button - Mobile Optimized -->
+                <div class="check-button-container mt-3">
+                    <button onclick="checkAnswer()" 
+                            id="check-button"
+                            class="btn btn-primary w-100 py-3 py-md-2">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="bi bi-check-lg me-2" style="font-size: 1.2rem;"></i>
+                            <span style="font-size: clamp(1rem, 3.5vw, 1.1rem);">Check Answer</span>
+                        </div>
+                    </button>
+                    <div class="form-text mt-2 text-center" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">
+                        Press <kbd class="small">Enter</kbd> or tap the button above
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Area -->
+        <div id="write-feedback" class="feedback-card" style="display: none;">
+            <div class="card border-0 shadow-sm mb-3 mb-md-4">
+                <div class="card-body p-3 p-md-4">
+                    <div id="feedback-content"></div>
+                    <div class="text-center mt-3">
+                        <button onclick="continueToNext()" 
+                                class="btn btn-primary px-4 py-2 w-100 w-md-auto">
+                            <span style="font-size: clamp(0.9rem, 3vw, 1rem);">Continue</span>
+                            <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons - Mobile Optimized -->
+        <div class="action-buttons">
+            <div class="row g-2">
+                <div class="col-6 col-md-3">
+                    <button onclick="skipCard()" 
+                            class="btn btn-outline-secondary w-100 py-2">
+                        <i class="bi bi-forward me-1 d-none d-md-inline"></i>
+                        <span style="font-size: clamp(0.8rem, 2.8vw, 0.9rem);">Skip</span>
+                    </button>
+                </div>
+                <div class="col-6 col-md-3">
+                    <button onclick="revealAnswer()" 
+                            class="btn btn-outline-info w-100 py-2">
+                        <i class="bi bi-eye me-1 d-none d-md-inline"></i>
+                        <span style="font-size: clamp(0.8rem, 2.8vw, 0.9rem);">Reveal</span>
+                    </button>
+                </div>
+                <div class="col-6 col-md-3">
+                    <button onclick="showHint()" 
+                            class="btn btn-outline-warning w-100 py-2">
+                        <i class="bi bi-lightbulb me-1 d-none d-md-inline"></i>
+                        <span style="font-size: clamp(0.8rem, 2.8vw, 0.9rem);">Hint</span>
+                    </button>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary w-100 py-2 dropdown-toggle" 
+                                type="button" 
+                                data-bs-toggle="dropdown"
+                                style="font-size: clamp(0.8rem, 2.8vw, 0.9rem);">
+                            <i class="bi bi-gear me-1 d-none d-md-inline"></i>
+                            Options
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end w-100">
+                            <li>
+                                <button class="dropdown-item" onclick="confirmRestart()">
+                                    <i class="bi bi-arrow-repeat me-2"></i> Restart
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item" onclick="shuffleCards()">
+                                    <i class="bi bi-shuffle me-2"></i> Shuffle
+                                </button>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'quizlet_copy:set-detail' set.pk %}">
+                                    <i class="bi bi-arrow-left me-2"></i> Back to Set
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completion Screen -->
+    <div id="write-complete" class="completion-screen" style="display: none;">
+        <div class="card border-0 shadow-lg bg-gradient-primary">
+            <div class="card-body p-4 p-md-5 text-center text-white">
+                <div class="mb-3 mb-md-4">
+                    <i class="bi bi-trophy" style="font-size: clamp(3rem, 15vw, 4rem);"></i>
+                </div>
+                <h2 class="mb-3" style="font-size: clamp(1.5rem, 6vw, 2rem);">Write Mode Complete! 🎉</h2>
+                <div id="write-summary" class="mb-3 mb-md-4"></div>
+                <div class="d-flex flex-column flex-md-row flex-wrap gap-2 justify-content-center">
+                    <button onclick="restartWriteMode()" 
+                            class="btn btn-light px-4 py-2 mb-2 mb-md-0"
+                            style="font-size: clamp(0.9rem, 3vw, 1rem);">
+                        <i class="bi bi-arrow-repeat me-2"></i> Try Again
+                    </button>
+                    <a href="{% url 'quizlet_copy:set-detail' set.pk %}" 
+                       class="btn btn-outline-light px-4 py-2"
+                       style="font-size: clamp(0.9rem, 3vw, 1rem);">
+                        <i class="bi bi-card-list me-2"></i> View Set
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hint Modal -->
+<div class="modal fade" id="hintModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" style="font-size: clamp(1rem, 3.5vw, 1.25rem);">
+                    <i class="bi bi-lightbulb text-warning me-2"></i>
+                    Hint
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="hint-content" class="text-center py-2 py-md-3">
+                    <p class="h5 mb-2 mb-md-3" id="hint-text" style="font-size: clamp(1.1rem, 4vw, 1.5rem); font-family: monospace; letter-spacing: 2px;"></p>
+                    <small class="text-muted" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">
+                        <i class="bi bi-info-circle me-1"></i>
+                        The term has <span id="hint-length">0</span> letters
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Main Container */
+    .write-mode-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 0.5rem;
+    }
+    
+    /* Write Icon */
+    .write-icon {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    @media (min-width: 768px) {
+        .write-icon {
+            width: 80px;
+            height: 80px;
+        }
+    }
+    
+    /* Definition Card */
+    .definition-card {
+        border-left: 4px solid #0d6efd;
+        background: linear-gradient(to right, #f8f9fa, #ffffff);
+    }
+    
+    .definition-content {
+        min-height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem;
+    }
+    
+    @media (min-width: 768px) {
+        .definition-content {
+            min-height: 120px;
+            padding: 1rem;
+        }
+    }
+    
+    /* Answer Textarea */
+    .answer-textarea {
+        border: 2px solid #dee2e6;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        padding: 0.75rem;
+        transition: all 0.3s ease;
+        line-height: 1.5;
+    }
+    
+    .answer-textarea:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    /* Character Counter */
+    .character-counter {
+        font-size: 0.75rem;
+    }
+    
+    /* Check Button */
+    .check-button-container {
+        position: relative;
+    }
+    
+    #check-button {
+        border-radius: 0.75rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    #check-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+    }
+    
+    #check-button:active {
+        transform: translateY(0);
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        margin-top: 1.5rem;
+    }
+    
+    .action-buttons .btn {
+        border-radius: 0.5rem;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+    
+    /* Dropdown Menu */
+    .dropdown-menu {
+        min-width: 200px;
+    }
+    
+    /* Completion Screen */
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+        border-radius: 1rem;
+    }
+    
+    /* Progress Bar Animation */
+    .progress-bar {
+        transition: width 0.5s ease;
+    }
+    
+    /* Keyboard Shortcuts Panel */
+    .shortcuts-hint {
+        position: fixed;
+        bottom: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 0.75rem;
+        padding: 0.5rem 1rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border: 1px solid #dee2e6;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        max-width: 95%;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .shortcuts-hint kbd {
+        background: #6c757d;
+        color: white;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-family: monospace;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 576px) {
+        .write-mode-container {
+            padding: 0 0.25rem;
+        }
+        
+        .definition-content p {
+            font-size: 1rem !important;
+        }
+        
+        .answer-textarea {
+            font-size: 0.95rem;
+            padding: 0.5rem;
+        }
+        
+        .action-buttons .row {
+            margin-left: -0.25rem;
+            margin-right: -0.25rem;
+        }
+        
+        .action-buttons .col-6 {
+            padding-left: 0.25rem;
+            padding-right: 0.25rem;
+        }
+        
+        .modal-dialog {
+            margin: 0.5rem;
+        }
+    }
+    
+    @media (min-width: 768px) {
+        .write-mode-container {
+            padding: 0 1rem;
+        }
+        
+        .action-buttons .btn {
+            padding: 0.5rem 0.75rem;
+        }
+    }
+    
+    /* Score Animation */
+    @keyframes scorePop {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+    
+    .score-update {
+        animation: scorePop 0.3s ease;
+    }
+    
+    /* Textarea auto-resize */
+    .answer-textarea {
+        overflow: hidden;
+        resize: none;
+    }
+    
+    /* Feedback Animation */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .feedback-card {
+        animation: slideIn 0.3s ease;
+    }
+    
+    /* Touch-friendly adjustments */
+    @media (hover: none) and (pointer: coarse) {
+        .btn {
+            min-height: 44px; /* Apple recommended minimum touch target */
+        }
+        
+        .answer-textarea {
+            min-height: 44px;
+        }
+        
+        .dropdown-toggle::after {
+            margin-left: 0.5rem;
+        }
+    }
+    
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .definition-card {
+            background: linear-gradient(to right, #2d3748, #4a5568);
+            color: #e2e8f0;
+        }
+        
+        .answer-textarea {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            border-color: #4a5568;
+        }
+        
+        .shortcuts-hint {
+            background: rgba(45, 55, 72, 0.95);
+            border-color: #4a5568;
+        }
+    }
+</style>
+{% comment %} 
+<!-- Floating Keyboard Shortcuts (Desktop only) -->
+<div class="shortcuts-hint d-none d-md-flex">
+    <span class="text-muted small">Shortcuts:</span>
+    <div class="d-flex gap-1">
+        <kbd>Enter</kbd>
+        <span class="small">Check Answer</span>
+    </div>
+    <div class="d-flex gap-1">
+        <kbd>Esc</kbd>
+        <span class="small">Skip</span>
+    </div>
+    <div class="d-flex gap-1">
+        <kbd>H</kbd>
+        <span class="small">Hint</span>
+    </div>
+    <div class="d-flex gap-1">
+        <kbd>R</kbd>
+        <span class="small">Reveal</span>
+    </div>
+</div> {% endcomment %}
+
+<script>
+    // ========== ENHANCED WRITE MODE LOGIC ==========
+    
+    const writeCards = [
+        {% for card in cards %}
+            {
+                id: {{ card.id }},
+                term: `{{ card.term|escapejs }}`,
+                definition: `{{ card.definition|escapejs }}`,
+                timesStudied: 0,
+                timesCorrect: 0,
+                lastAttempt: null
+            }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    // Fallback for empty sets
+    if (writeCards.length === 0) {
+        writeCards.push(
+            {id: 1, term: "Sample Term", definition: "Sample definition for testing", timesStudied: 0, timesCorrect: 0, lastAttempt: null}
+        );
+    }
+    
+    let currentWriteIndex = 0;
+    let writeScore = 0;
+    let totalAttempts = 0;
+    let totalCorrect = 0;
+    let currentStreak = 0;
+    let maxStreak = 0;
+    let sessionStartTime = new Date();
+    let isShowingFeedback = false;
+    
+    // Initialize write mode
+    function initWriteMode() {
+        currentWriteIndex = 0;
+        writeScore = 0;
+        totalAttempts = 0;
+        totalCorrect = 0;
+        currentStreak = 0;
+        maxStreak = 0;
+        sessionStartTime = new Date();
+        isShowingFeedback = false;
+        
+        // Reset card stats
+        writeCards.forEach(card => {
+            card.timesStudied = 0;
+            card.timesCorrect = 0;
+            card.lastAttempt = null;
+        });
+        
+        // Show study area, hide completion
+        document.getElementById('write-container').style.display = 'block';
+        document.getElementById('write-complete').style.display = 'none';
+        document.getElementById('write-feedback').style.display = 'none';
+        
+        // Reset textarea
+        const textarea = document.getElementById('write-answer');
+        textarea.value = '';
+        textarea.style.height = 'auto';
+        
+        // Shuffle cards
+        shuffleCards();
+        
+        // Start with first card
+        showNextCard();
+        updateProgress();
+    }
+    
+    function shuffleCards() {
+        for (let i = writeCards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [writeCards[i], writeCards[j]] = [writeCards[j], writeCards[i]];
+        }
+        currentWriteIndex = 0;
+        showNextCard();
+    }
+    
+    function showNextCard() {
+        if (currentWriteIndex >= writeCards.length) {
+            completeWriteMode();
+            return;
+        }
+        
+        const card = writeCards[currentWriteIndex];
+        
+        // Update definition
+        document.getElementById('write-definition').innerHTML = 
+            `<p class="h3 h4-md fw-normal text-dark mb-0">${card.definition}</p>`;
+        
+        // Clear and reset textarea
+        const textarea = document.getElementById('write-answer');
+        textarea.value = '';
+        textarea.style.height = 'auto';
+        textarea.focus();
+        
+        // Update character count
+        updateCharCount();
+        
+        // Update position
+        document.getElementById('write-position').textContent = currentWriteIndex + 1;
+        
+        // Hide feedback
+        document.getElementById('write-feedback').style.display = 'none';
+        isShowingFeedback = false;
+        
+        // Update check button text
+        document.querySelector('#check-button span').textContent = 'Check Answer';
+        
+        updateProgress();
+    }
+    
+    function updateCharCount() {
+        const textarea = document.getElementById('write-answer');
+        const charCount = textarea.value.length;
+        document.getElementById('char-count').textContent = charCount;
+        
+        // Auto-resize textarea
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+    }
+    
+    function checkAnswer() {
+        if (isShowingFeedback) {
+            continueToNext();
+            return;
+        }
+        
+        const userAnswer = document.getElementById('write-answer').value.trim();
+        const card = writeCards[currentWriteIndex];
+        
+        if (!userAnswer) {
+            showFeedback('Please type an answer first!', 'warning');
+            return;
+        }
+        
+        // Update card stats
+        card.timesStudied++;
+        card.lastAttempt = new Date();
+        totalAttempts++;
+        
+        // Check answer (case-insensitive, allow minor typos)
+        const normalizedUser = userAnswer.toLowerCase().replace(/\s+/g, ' ').trim();
+        const normalizedCorrect = card.term.toLowerCase().replace(/\s+/g, ' ').trim();
+        
+        let isCorrect = normalizedUser === normalizedCorrect;
+        
+        // Allow for minor spelling differences (optional - can be enabled)
+        // if (!isCorrect && levenshteinDistance(normalizedUser, normalizedCorrect) <= 2) {
+        //     isCorrect = true;
+        // }
+        
+        if (isCorrect) {
+            // Correct answer
+            writeScore += 10;
+            totalCorrect++;
+            currentStreak++;
+            if (currentStreak > maxStreak) maxStreak = currentStreak;
+            card.timesCorrect++;
+            
+            showFeedback(
+                `<div class="text-center">
+                    <i class="bi bi-check-circle text-success display-4 mb-3"></i>
+                    <h4 class="text-success mb-2">Correct! 🎉</h4>
+                    <p class="text-muted">The answer is: <strong>${card.term}</strong></p>
+                    <div class="mt-3">
+                        <span class="badge bg-success me-2">+10 points</span>
+                        <span class="badge bg-info">Streak: ${currentStreak}</span>
+                    </div>
+                </div>`,
+                'success'
+            );
+            
+            // Update check button
+            document.querySelector('#check-button span').textContent = 'Continue →';
+        } else {
+            // Incorrect answer
+            currentStreak = 0;
+            
+            showFeedback(
+                `<div class="text-center">
+                    <i class="bi bi-x-circle text-danger display-4 mb-3"></i>
+                    <h4 class="text-danger mb-2">Not Quite</h4>
+                    <p>The correct answer is: <strong class="text-primary">${card.term}</strong></p>
+                    <p class="text-muted">You typed: "${userAnswer}"</p>
+                    <div class="mt-3">
+                        <button onclick="revealAnswer()" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye me-1"></i> Show Explanation
+                        </button>
+                    </div>
+                </div>`,
+                'danger'
+            );
+            
+            // Update check button
+            document.querySelector('#check-button span').textContent = 'Continue →';
+        }
+        
+        // Update score with animation
+        const scoreElement = document.getElementById('write-score');
+        scoreElement.textContent = writeScore;
+        scoreElement.classList.add('score-update');
+        setTimeout(() => scoreElement.classList.remove('score-update'), 300);
+        
+        updateProgress();
+        isShowingFeedback = true;
+    }
+    
+    function showFeedback(content, type) {
+        const feedbackCard = document.getElementById('write-feedback');
+        const feedbackContent = document.getElementById('feedback-content');
+        
+        feedbackContent.innerHTML = content;
+        feedbackCard.style.display = 'block';
+        
+        // Scroll to feedback on mobile
+        if (window.innerWidth < 768) {
+            feedbackCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+    
+    function continueToNext() {
+        currentWriteIndex++;
+        showNextCard();
+    }
+    
+    function skipCard() {
+        const card = writeCards[currentWriteIndex];
+        
+        showFeedback(
+            `<div class="text-center">
+                <i class="bi bi-forward text-info display-4 mb-3"></i>
+                <h4 class="text-info mb-2">Card Skipped</h4>
+                <p>The answer is: <strong>${card.term}</strong></p>
+                <p class="text-muted small">This card will reappear later</p>
+            </div>`,
+            'info'
+        );
+        
+        // Move card to end of queue
+        writeCards.push(writeCards.splice(currentWriteIndex, 1)[0]);
+        isShowingFeedback = true;
+        
+        // Update check button
+        document.querySelector('#check-button span').textContent = 'Continue →';
+    }
+    
+    function revealAnswer() {
+        const card = writeCards[currentWriteIndex];
+        showFeedback(
+            `<div class="text-center">
+                <i class="bi bi-eye text-primary display-4 mb-3"></i>
+                <h4 class="text-primary mb-2">Answer Revealed</h4>
+                <p class="h4 text-dark mb-3">${card.term}</p>
+                <p class="text-muted">Type it correctly next time!</p>
+            </div>`,
+            'primary'
+        );
+    }
+    
+    function showHint() {
+        const card = writeCards[currentWriteIndex];
+        const term = card.term;
+        
+        // Create hint with first letter and underscores
+        const words = term.split(' ');
+        const hint = words.map(word => {
+            if (word.length > 0) {
+                return word[0] + '_'.repeat(word.length - 1);
+            }
+            return '';
+        }).join(' ');
+        
+        document.getElementById('hint-text').textContent = hint;
+        document.getElementById('hint-length').textContent = term.replace(/\s/g, '').length;
+        
+        // Show modal
+        const hintModal = new bootstrap.Modal(document.getElementById('hintModal'));
+        hintModal.show();
+    }
+    
+    function updateProgress() {
+        const progressPercent = ((currentWriteIndex + 1) / writeCards.length) * 100;
+        const progressBar = document.getElementById('write-progress-bar');
+        
+        progressBar.style.width = `${progressPercent}%`;
+        
+        // Color based on accuracy
+        const accuracy = totalAttempts > 0 ? (totalCorrect / totalAttempts) * 100 : 0;
+        if (accuracy >= 80) {
+            progressBar.className = 'progress-bar bg-success';
+        } else if (accuracy >= 60) {
+            progressBar.className = 'progress-bar bg-info';
+        } else if (accuracy >= 40) {
+            progressBar.className = 'progress-bar bg-warning';
+        } else {
+            progressBar.className = 'progress-bar bg-danger';
+        }
+    }
+    
+    function completeWriteMode() {
+        const sessionEndTime = new Date();
+        const sessionMinutes = Math.round((sessionEndTime - sessionStartTime) / 1000 / 60);
+        const accuracy = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
+        
+        const summary = document.getElementById('write-summary');
+        summary.innerHTML = `
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    <div class="row mb-3">
+                        <div class="col-6 mb-3">
+                            <div class="text-center">
+                                <h3 class="fw-bold mb-0" style="font-size: clamp(1.5rem, 6vw, 2rem);">${writeScore}</h3>
+                                <p class="small mb-0 opacity-75">Points</p>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="text-center">
+                                <h3 class="fw-bold mb-0" style="font-size: clamp(1.5rem, 6vw, 2rem);">${accuracy}%</h3>
+                                <p class="small mb-0 opacity-75">Accuracy</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h3 class="fw-bold mb-0" style="font-size: clamp(1.5rem, 6vw, 2rem);">${maxStreak}</h3>
+                                <p class="small mb-0 opacity-75">Max Streak</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h3 class="fw-bold mb-0" style="font-size: clamp(1.5rem, 6vw, 2rem);">${sessionMinutes}</h3>
+                                <p class="small mb-0 opacity-75">Minutes</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="${accuracy >= 80 ? 'fw-bold' : ''} text-white">
+                        ${accuracy >= 90 ? 'Perfect recall! You mastered this set! 🏆' :
+                          accuracy >= 75 ? 'Excellent work! Strong memory retention.' :
+                          accuracy >= 60 ? 'Good job! Keep practicing for mastery.' :
+                          'Keep practicing! Review the cards you missed.'}
+                    </p>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('write-container').style.display = 'none';
+        document.getElementById('write-complete').style.display = 'block';
+    }
+    
+    function restartWriteMode() {
+        initWriteMode();
+    }
+    
+    function confirmRestart() {
+        if (totalAttempts > 0) {
+            if (confirm('Restart will reset your progress. Continue?')) {
+                initWriteMode();
+            }
+        } else {
+            initWriteMode();
+        }
+    }
+    
+    // ========== ENHANCED TEXTAREA FUNCTIONALITY ==========
+    
+    // Auto-resize textarea as user types
+    document.getElementById('write-answer').addEventListener('input', function() {
+        updateCharCount();
+    });
+    
+    // Handle Enter key in textarea (Shift+Enter for new line, Enter to submit)
+    document.getElementById('write-answer').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (!isShowingFeedback) {
+                checkAnswer();
+            } else {
+                continueToNext();
+            }
+        }
+    });
+    
+    // ========== KEYBOARD SHORTCUTS ==========
+    document.addEventListener('keydown', function(e) {
+        const activeElement = document.activeElement;
+        const isTextareaFocused = activeElement.id === 'write-answer';
+        
+        switch(e.key) {
+            case 'Enter':
+                if (!isTextareaFocused && !isShowingFeedback) {
+                    e.preventDefault();
+                    checkAnswer();
+                } else if (!isTextareaFocused && isShowingFeedback) {
+                    e.preventDefault();
+                    continueToNext();
+                }
+                break;
+                
+            case 'Escape':
+                e.preventDefault();
+                if (!isShowingFeedback) {
+                    skipCard();
+                }
+                break;
+                
+            case 'h':
+            case 'H':
+                if (!isShowingFeedback) {
+                    e.preventDefault();
+                    showHint();
+                }
+                break;
+                
+            case 'r':
+            case 'R':
+                if (!isTextareaFocused && !isShowingFeedback) {
+                    e.preventDefault();
+                    revealAnswer();
+                }
+                break;
+                
+            case ' ':
+                if (!isTextareaFocused) {
+                    e.preventDefault();
+                    if (isShowingFeedback) {
+                        continueToNext();
+                    }
+                }
+                break;
+        }
+    });
+    
+    // Handle textarea focus
+    document.getElementById('write-answer').addEventListener('focus', function() {
+        this.select();
+    });
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize write mode
+        setTimeout(() => {
+            initWriteMode();
+        }, 100);
+        
+        // Add touch event listeners for better mobile experience
+        if ('ontouchstart' in window) {
+            // Make buttons more responsive on touch devices
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(button => {
+                button.addEventListener('touchstart', function() {
+                    this.classList.add('active');
+                });
+                button.addEventListener('touchend', function() {
+                    this.classList.remove('active');
+                });
+            });
+        }
+    });
+</script>

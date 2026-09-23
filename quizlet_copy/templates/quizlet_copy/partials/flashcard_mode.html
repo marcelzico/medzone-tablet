@@ -1,0 +1,729 @@
+{% comment %} templates/quizlet/partials/flashcard_mode.html - CORRECTED VERSION {% endcomment %}
+<div id="flashcard-container" class="text-center">
+    {% comment %} <h4 class="mb-2" style="font-size: clamp(1rem, 3.5vw, 1.25rem);">📝 Flashcard Mode</h4>
+    <p class="text-muted mb-3" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">Click the card to flip it. Use keyboard shortcuts for navigation.</p> {% endcomment %}
+    
+    <!-- Flashcard with proper 3D flip -->
+    <div class="flashcard-wrapper">
+        <div class="flashcard" id="flashcard">
+            <div class="flashcard-inner">
+                <!-- Front Side - Term -->
+                <div class="flashcard-side flashcard-front">
+                    <div class="flashcard-header">
+                        <span class="badge bg-primary">Term</span>
+                    </div>
+                    <div class="flashcard-content" id="card-term">
+                        <!-- Term will be inserted here -->
+                    </div>
+                    <div class="flashcard-footer">
+                        <small class="text-muted">Click to see definition</small>
+                    </div>
+                </div>
+                
+                <!-- Back Side - Definition -->
+                <div class="flashcard-side flashcard-back">
+                    <div class="flashcard-header">
+                        <span class="badge bg-success">Definition</span>
+                    </div>
+                    <div class="flashcard-content" id="card-definition">
+                        <!-- Definition will be inserted here -->
+                    </div>
+                    <div class="flashcard-footer">
+                        <small class="text-muted">Click to see term</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Navigation Controls -->
+    <div class="mt-4">
+        <div class="btn-group" role="group">
+            <button onclick="prevCard()" class="btn btn-secondary py-2 px-3">
+                <i class="bi bi-chevron-left"></i>
+                <span class="d-none d-sm-inline"> Previous</span>
+            </button>
+            <button onclick="flipCard()" class="btn btn-primary py-2 px-4">
+                <i class="bi bi-arrow-repeat"></i>
+                <span class="d-none d-sm-inline"> Flip Card</span>
+            </button>
+            <button onclick="nextCard()" class="btn btn-secondary py-2 px-3">
+                <span class="d-none d-sm-inline">Next </span>
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+        
+        <!-- Additional Controls -->
+        <div class="mt-3">
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                <button onclick="shuffleCards()" class="btn btn-outline-warning btn-sm py-1 px-3">
+                    <i class="bi bi-shuffle"></i>
+                    <span class="d-none d-sm-inline"> Shuffle</span>
+                </button>
+                <button onclick="resetCards()" class="btn btn-outline-info btn-sm py-1 px-3">
+                    <i class="bi bi-arrow-clockwise"></i>
+                    <span class="d-none d-sm-inline"> Reset</span>
+                </button>
+                <button onclick="toggleAutoplay()" class="btn btn-outline-success btn-sm py-1 px-3" id="autoplay-btn">
+                    <i class="bi bi-play"></i>
+                    <span class="d-none d-sm-inline"> Autoplay</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Progress and Status -->
+        <div class="mt-3">
+            <div class="d-flex justify-content-center align-items-center gap-3">
+                <span id="progress" class="badge bg-info rounded-pill py-2 px-3">
+                    <i class="bi bi-card-text me-1"></i>
+                    <span id="current-index">1</span>/<span id="total-cards">{{ cards|length }}</span>
+                </span>
+                <span id="autoplay-status" class="badge bg-secondary rounded-pill py-2 px-3 d-none">
+                    <i class="bi bi-clock me-1"></i>
+                    <span>Autoplay: Off</span>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Zoom Modal for Long Text -->
+<div class="modal fade" id="zoomModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="zoomModalLabel">Card Content</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="zoom-content" class="text-center p-4"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Flashcard Container */
+    #flashcard-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 0.5rem;
+    }
+    
+    /* Flashcard Wrapper */
+    .flashcard-wrapper {
+        perspective: 1000px;
+        margin: 1rem auto;
+        width: 100%;
+        max-width: 500px;
+        height: 60vh;
+        min-height: 300px;
+        max-height: 400px;
+    }
+    
+    /* Flashcard */
+    .flashcard {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .flashcard.flipped {
+        transform: rotateY(180deg);
+    }
+    
+    .flashcard-inner {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transform-style: preserve-3d;
+    }
+    
+    /* Flashcard Sides */
+    .flashcard-side {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .flashcard-front {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border: 2px solid #e9ecef;
+    }
+    
+    .flashcard-back {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e7f5ff 100%);
+        border: 2px solid #cfe2ff;
+        transform: rotateY(180deg);
+    }
+    
+    /* Flashcard Header */
+    .flashcard-header {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+        background: rgba(255,255,255,0.9);
+        flex-shrink: 0;
+    }
+    
+    .flashcard-front .flashcard-header {
+        background: linear-gradient(135deg, #e7f1ff 0%, #d0e2ff 100%);
+    }
+    
+    .flashcard-back .flashcard-header {
+        background: linear-gradient(135deg, #d1e7dd 0%, #a3cfbb 100%);
+    }
+    
+    /* Flashcard Content - IMPROVED TEXT HANDLING */
+    .flashcard-content {
+        flex: 1;
+        padding: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+        font-size: clamp(1.1rem, 3.5vw, 1.5rem);
+        line-height: 1.6;
+    }
+    
+    /* Custom scrollbar for better mobile experience */
+    .flashcard-content::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    .flashcard-content::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.05);
+        border-radius: 10px;
+    }
+    
+    .flashcard-content::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.2);
+        border-radius: 10px;
+    }
+    
+    /* Flashcard Footer */
+    .flashcard-footer {
+        padding: 1rem;
+        border-top: 1px solid rgba(0,0,0,0.1);
+        background: rgba(255,255,255,0.9);
+        flex-shrink: 0;
+        font-size: 0.875rem;
+    }
+    
+    /* Zoom button for very long text */
+    .zoom-btn {
+        position: absolute;
+        bottom: 0.5rem;
+        right: 0.5rem;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 10;
+        opacity: 0.7;
+        transition: opacity 0.3s ease;
+    }
+    
+    .zoom-btn:hover {
+        opacity: 1;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .flashcard-wrapper {
+            height: 50vh;
+            min-height: 250px;
+            max-height: 350px;
+        }
+        
+        .flashcard-content {
+            padding: 1.5rem;
+            font-size: clamp(1rem, 3.2vw, 1.3rem);
+            line-height: 1.5;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .flashcard-wrapper {
+            height: 45vh;
+            min-height: 200px;
+            max-height: 300px;
+        }
+        
+        .flashcard-content {
+            padding: 1rem;
+            font-size: clamp(0.95rem, 3vw, 1.1rem);
+            line-height: 1.4;
+        }
+    }
+    
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .flashcard-front {
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            border-color: #4a5568;
+            color: #e2e8f0;
+        }
+        
+        .flashcard-back {
+            background: linear-gradient(135deg, #1c2a3a 0%, #2d3748 100%);
+            border-color: #0d6efd;
+            color: #e2e8f0;
+        }
+    }
+</style>
+
+<script>
+    // ========== FLASHCARD MODE WITH PROPER 3D FLIP ==========
+    
+    // Card data from Django - use actual cards from context
+    const allCards = [
+        {% for card in cards %}
+            {
+                id: {{ card.id }},
+                term: `{{ card.term|escapejs }}`,
+                definition: `{{ card.definition|escapejs }}`
+            }{% if not forloop.last %},{% endif %}
+        {% empty %}
+            // Fallback data for testing
+            {
+                id: 1,
+                term: "Sample Term",
+                definition: "This is a sample definition that demonstrates how long text is handled properly on mobile devices. It shows that even very long definitions will be fully visible and readable."
+            },
+            {
+                id: 2,
+                term: "Another Term",
+                definition: "Short definition"
+            }
+        {% endfor %}
+    ];
+    
+    // Game state
+    let currentIndex = 0;
+    let isFlipped = false;
+    let autoplayInterval = null;
+    let autoplaySpeed = 3000;
+    let isAutoplayActive = false;
+    
+    // Initialize
+    function initFlashcardMode() {
+        if (allCards.length === 0) {
+            showNoCardsMessage();
+            return;
+        }
+        
+        updateCardDisplay();
+        updateProgress();
+        setupEventListeners();
+        setupZoomButtons();
+    }
+    
+    function showNoCardsMessage() {
+        const container = document.getElementById('flashcard-container');
+        container.innerHTML = `
+            <div class="alert alert-warning text-center">
+                <i class="bi bi-exclamation-triangle display-4 mb-3"></i>
+                <h4>No Flashcards Available</h4>
+                <p class="mb-0">Add some flashcards to this set to start studying.</p>
+            </div>
+        `;
+    }
+    
+    function updateCardDisplay() {
+        const card = allCards[currentIndex];
+        if (!card) return;
+        
+        // Update term and definition elements directly
+        const termElement = document.getElementById('card-term');
+        const definitionElement = document.getElementById('card-definition');
+        
+        // Clear existing content
+        termElement.innerHTML = '';
+        definitionElement.innerHTML = '';
+        
+        // Create and append content with proper handling
+        const termContent = createTextElement(card.term, 'term');
+        const definitionContent = createTextElement(card.definition, 'definition');
+        
+        termElement.appendChild(termContent);
+        definitionElement.appendChild(definitionContent);
+        
+        // Reset card to front view
+        const flashcard = document.getElementById('flashcard');
+        flashcard.classList.remove('flipped');
+        isFlipped = false;
+        
+        // Auto-resize text
+        autoResizeText(termContent);
+        autoResizeText(definitionContent);
+        
+        // Setup zoom buttons if needed
+        setupZoomButtons();
+    }
+    
+    function createTextElement(text, type) {
+        const container = document.createElement('div');
+        container.className = 'text-overflow-handle';
+        
+        // Process text with line breaks
+        const processedText = processText(text);
+        
+        if (processedText.includes('\n')) {
+            const lines = processedText.split('\n');
+            lines.forEach((line, index) => {
+                const p = document.createElement('p');
+                p.className = index === 0 ? 'mb-0' : 'mt-2 mb-0';
+                p.textContent = line;
+                container.appendChild(p);
+            });
+        } else {
+            container.textContent = processedText;
+        }
+        
+        return container;
+    }
+    
+    function processText(text) {
+        // Handle basic HTML entities
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+    
+    function autoResizeText(element) {
+        const text = element.textContent || element.innerText;
+        if (text.length < 100) return;
+        
+        // Adjust font size based on text length
+        let fontSize;
+        if (text.length > 500) {
+            fontSize = '0.9rem';
+        } else if (text.length > 300) {
+            fontSize = '1rem';
+        } else if (text.length > 150) {
+            fontSize = '1.1rem';
+        } else {
+            fontSize = '1.2rem';
+        }
+        
+        element.style.fontSize = fontSize;
+        
+        // Further adjustments for mobile
+        if (window.innerWidth <= 576) {
+            if (text.length > 300) {
+                element.style.fontSize = '0.85rem';
+                element.style.lineHeight = '1.4';
+            } else if (text.length > 150) {
+                element.style.fontSize = '0.95rem';
+                element.style.lineHeight = '1.5';
+            }
+        }
+    }
+    
+    function setupZoomButtons() {
+        // Remove existing zoom buttons
+        document.querySelectorAll('.zoom-btn').forEach(btn => btn.remove());
+        
+        // Add zoom button for long term
+        const termElement = document.getElementById('card-term');
+        const termText = termElement.textContent || termElement.innerText;
+        
+        if (termText.length > 200) {
+            const zoomBtn = createZoomButton(termText, 'Term');
+            termElement.appendChild(zoomBtn);
+        }
+        
+        // Add zoom button for long definition
+        const definitionElement = document.getElementById('card-definition');
+        const definitionText = definitionElement.textContent || definitionElement.innerText;
+        
+        if (definitionText.length > 200) {
+            const zoomBtn = createZoomButton(definitionText, 'Definition');
+            definitionElement.appendChild(zoomBtn);
+        }
+    }
+    
+    function createZoomButton(text, type) {
+        const button = document.createElement('button');
+        button.className = 'zoom-btn';
+        button.innerHTML = '<i class="bi bi-zoom-in"></i>';
+        button.title = 'View full text';
+        button.onclick = (e) => {
+            e.stopPropagation();
+            showZoomModal(text, type);
+        };
+        return button;
+    }
+    
+    function showZoomModal(text, type) {
+        const modalContent = document.getElementById('zoom-content');
+        modalContent.innerHTML = '';
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'text-start';
+        contentDiv.style.whiteSpace = 'pre-wrap';
+        contentDiv.style.wordBreak = 'break-word';
+        contentDiv.style.fontSize = '1.1rem';
+        contentDiv.style.lineHeight = '1.6';
+        
+        // Process and display text with line breaks
+        const processedText = processText(text);
+        if (processedText.includes('\n')) {
+            const lines = processedText.split('\n');
+            lines.forEach(line => {
+                const p = document.createElement('p');
+                p.className = 'mb-2';
+                p.textContent = line;
+                contentDiv.appendChild(p);
+            });
+        } else {
+            contentDiv.textContent = processedText;
+        }
+        
+        modalContent.appendChild(contentDiv);
+        
+        const modalLabel = document.getElementById('zoomModalLabel');
+        modalLabel.textContent = `${type} Details`;
+        
+        const modal = new bootstrap.Modal(document.getElementById('zoomModal'));
+        modal.show();
+    }
+    
+    function flipCard() {
+        const flashcard = document.getElementById('flashcard');
+        flashcard.classList.toggle('flipped');
+        isFlipped = !isFlipped;
+    }
+    
+    function nextCard() {
+        if (currentIndex < allCards.length - 1) {
+            currentIndex++;
+        } else {
+            currentIndex = 0; // Loop back to start
+        }
+        updateCardDisplay();
+        updateProgress();
+    }
+    
+    function prevCard() {
+        if (currentIndex > 0) {
+            currentIndex--;
+        } else {
+            currentIndex = allCards.length - 1; // Loop to end
+        }
+        updateCardDisplay();
+        updateProgress();
+    }
+    
+    function shuffleCards() {
+        // Fisher-Yates shuffle
+        for (let i = allCards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [allCards[i], allCards[j]] = [allCards[j], allCards[i]];
+        }
+        
+        currentIndex = 0;
+        updateCardDisplay();
+        updateProgress();
+        showFeedback('Cards shuffled!', 'success');
+    }
+    
+    function resetCards() {
+        window.location.reload();
+    }
+    
+    function toggleAutoplay() {
+        const autoplayBtn = document.getElementById('autoplay-btn');
+        const autoplayStatus = document.getElementById('autoplay-status');
+        
+        if (autoplayInterval) {
+            // Stop autoplay
+            clearInterval(autoplayInterval);
+            autoplayInterval = null;
+            isAutoplayActive = false;
+            
+            autoplayBtn.innerHTML = '<i class="bi bi-play"></i><span class="d-none d-sm-inline"> Autoplay</span>';
+            autoplayBtn.classList.remove('btn-success');
+            autoplayBtn.classList.add('btn-outline-success');
+            
+            autoplayStatus.innerHTML = '<i class="bi bi-clock me-1"></i><span>Autoplay: Off</span>';
+            autoplayStatus.classList.remove('bg-success');
+            autoplayStatus.classList.add('bg-secondary');
+            
+            showFeedback('Autoplay stopped', 'info');
+        } else {
+            // Start autoplay
+            autoplayInterval = setInterval(() => {
+                if (!isFlipped) {
+                    flipCard();
+                } else {
+                    nextCard();
+                }
+            }, autoplaySpeed);
+            
+            isAutoplayActive = true;
+            
+            autoplayBtn.innerHTML = '<i class="bi bi-pause"></i><span class="d-none d-sm-inline"> Stop</span>';
+            autoplayBtn.classList.remove('btn-outline-success');
+            autoplayBtn.classList.add('btn-success');
+            
+            autoplayStatus.innerHTML = '<i class="bi bi-clock me-1"></i><span>Autoplay: On</span>';
+            autoplayStatus.classList.remove('bg-secondary');
+            autoplayStatus.classList.add('bg-success');
+            autoplayStatus.classList.remove('d-none');
+            
+            showFeedback('Autoplay started', 'success');
+        }
+    }
+    
+    function updateProgress() {
+        document.getElementById('current-index').textContent = currentIndex + 1;
+        document.getElementById('total-cards').textContent = allCards.length;
+    }
+    
+    function showFeedback(message, type) {
+        const feedback = document.createElement('div');
+        feedback.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        feedback.style.top = '20px';
+        feedback.style.right = '20px';
+        feedback.style.zIndex = '9999';
+        feedback.style.maxWidth = '300px';
+        feedback.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(feedback);
+        
+        setTimeout(() => {
+            if (feedback.parentNode) {
+                feedback.parentNode.removeChild(feedback);
+            }
+        }, 3000);
+    }
+    
+    function setupEventListeners() {
+        const flashcard = document.getElementById('flashcard');
+        
+        // Click to flip
+        flashcard.addEventListener('click', flipCard);
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            const activeElement = document.activeElement;
+            const isInputFocused = activeElement.tagName === 'INPUT' || 
+                                  activeElement.tagName === 'TEXTAREA' ||
+                                  activeElement.tagName === 'SELECT';
+            
+            if (isInputFocused) return;
+            
+            switch(e.key) {
+                case ' ':
+                case 'Enter':
+                    e.preventDefault();
+                    flipCard();
+                    break;
+                case 'ArrowRight':
+                case 'n':
+                case 'N':
+                    e.preventDefault();
+                    nextCard();
+                    break;
+                case 'ArrowLeft':
+                case 'p':
+                case 'P':
+                    e.preventDefault();
+                    prevCard();
+                    break;
+                case 's':
+                case 'S':
+                    if (!e.ctrlKey && !e.metaKey) {
+                        e.preventDefault();
+                        shuffleCards();
+                    }
+                    break;
+                case 'a':
+                case 'A':
+                    if (!e.ctrlKey && !e.metaKey) {
+                        e.preventDefault();
+                        toggleAutoplay();
+                    }
+                    break;
+                case 'r':
+                case 'R':
+                    if (!e.ctrlKey && !e.metaKey) {
+                        e.preventDefault();
+                        resetCards();
+                    }
+                    break;
+            }
+        });
+        
+        // Touch swipe for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        flashcard.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+        
+        flashcard.addEventListener('touchend', function(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+        
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+            
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    nextCard();
+                } else {
+                    prevCard();
+                }
+            }
+        }
+        
+        // Handle window resize
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                updateCardDisplay();
+            }, 250);
+        });
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            initFlashcardMode();
+        }, 100);
+    });
+</script>

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer une carte mentale{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h3>Supprimer une carte mentale</h3>
+            </div>
+            <div class="card-body">
+                <p>Etes-vous sure de la supprimer?</p>
+                
+                <div class="alert alert-info">
+                    <strong>Terme:</strong> {{ object.term }}<br>
+                    <strong>Définition:</strong> {{ object.definition }}
+                </div>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'quizlet_copy:set-detail' object.flashcard_set.pk %}" class="btn btn-outline-secondary">
+                            Annuler
+                        </a>
+                        <button type="submit" class="btn btn-danger">Oui, supprimer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

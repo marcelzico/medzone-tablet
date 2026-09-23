@@ -1,0 +1,973 @@
+{% comment %} templates/quizlet/partials/learn_mode.html - COMPACT RATING BUTTONS VERSION {% endcomment %}
+<div id="learn-mode" class="learn-mode-container">
+    <!-- Main Study Area - Clean Card Layout -->
+    <div id="learn-container" class="study-area">
+        <!-- Current Card (Clean Design) -->
+        <div class="study-card mb-4">
+            <div class="card card-border shadow-sm">
+                <div class="card-body p-3 p-md-4">
+                    <!-- Progress Indicator -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <small class="text-muted" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">Card 
+                            <span id="card-position">{{ cards|length }}</span>/{{ cards|length }}
+                        </small>
+                        <div class="study-badge bg-light text-dark rounded-pill px-2 px-md-3 py-1">
+                            <small style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">
+                                <i class="bi bi-clock me-1"></i><span id="times-studied">0</span> studied
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Card Content -->
+                    <div class="card-content">
+                        <!-- Term Side (Always Visible) -->
+                        <div id="term-side" class="term-side mb-4">
+                            <h6 class="text-uppercase text-muted small mb-2" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">
+                                <i class="bi bi-question-circle me-1"></i> Term
+                            </h6>
+                            <div class="term-display" id="learn-term">
+                                <p class="display-6 fw-semibold mb-0" style="font-size: clamp(1.5rem, 6vw, 2.5rem);">
+                                    {% if cards %}
+                                        {{ cards.0.term|default:"Loading term..." }}
+                                    {% else %}
+                                        No cards available
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Definition Side (Hidden Initially) -->
+                        <div id="definition-side" class="definition-side" style="display: none;">
+                            <div class="separator mb-4">
+                                <span class="separator-line"></span>
+                                <span class="separator-text text-muted small px-2" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">Definition</span>
+                                <span class="separator-line"></span>
+                            </div>
+                            <div class="definition-display" id="learn-definition">
+                                <p class="h4 fw-normal text-dark mb-0" style="font-size: clamp(1.1rem, 4vw, 1.5rem);">
+                                    {% if cards %}
+                                        {{ cards.0.definition|default:"Loading definition..." }}
+                                    {% else %}
+                                        No definition available
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Reveal Button -->
+                        <div class="reveal-section text-center mt-4">
+                            <button onclick="revealDefinition()" 
+                                    id="reveal-btn" 
+                                    class="btn btn-primary px-4 py-2 py-md-3 w-100"
+                                    style="font-size: clamp(0.9rem, 3vw, 1rem);">
+                                <i class="bi bi-eye me-2"></i> Reveal Definition
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rating Panel (Hidden Initially) - COMPACT VERSION -->
+        <div id="rating-panel" class="rating-panel" style="display: none;">
+            <div class="card shadow-sm border-0 bg-light">
+                <div class="card-body p-3 p-md-4">
+                    <div class="text-center mb-3 mb-md-4">
+                        <h5 class="fw-semibold mb-1" style="font-size: clamp(1rem, 3.5vw, 1.25rem);">
+                            <i class="bi bi-star me-2"></i>How well did you know this?
+                        </h5>
+                        <p class="text-muted small mb-0" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">Rate your recall to optimize learning</p>
+                    </div>
+                    
+                    <!-- Compact Rating Buttons - Mobile Optimized -->
+                    <div class="rating-buttons-compact">
+                        <div class="row g-2 g-md-3 justify-content-center">
+                            <!-- Didn't Know -->
+                            <div class="col-4">
+                                <div class="rating-button-wrapper">
+                                    <button onclick="rateCard(1)" 
+                                            class="btn rating-btn rating-btn-1 w-100 h-100 py-2 py-md-3">
+                                        <div class="rating-btn-content">
+                                            <div class="rating-icon mb-1">
+                                                <i class="bi bi-x-circle-fill" style="font-size: clamp(1.25rem, 4vw, 1.5rem);"></i>
+                                            </div>
+                                            <div class="rating-text">
+                                                <div class="rating-title fw-semibold" style="font-size: clamp(0.8rem, 2.8vw, 0.9rem);">
+                                                    Didn't Know
+                                                </div>
+                                                <div class="rating-subtitle text-muted d-none d-md-block" style="font-size: 0.75rem;">
+                                                    Study now
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rating-shortcut">
+                                            <kbd style="font-size: clamp(0.7rem, 2.2vw, 0.8rem);">1</kbd>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Almost Knew -->
+                            <div class="col-4">
+                                <div class="rating-button-wrapper">
+                                    <button onclick="rateCard(2)" 
+                                            class="btn rating-btn rating-btn-2 w-100 h-100 py-2 py-md-3">
+                                        <div class="rating-btn-content">
+                                            <div class="rating-icon mb-1">
+                                                <i class="bi bi-clock-fill" style="font-size: clamp(1.25rem, 4vw, 1.5rem);"></i>
+                                            </div>
+                                            <div class="rating-text">
+                                                <div class="rating-title fw-semibold" style="font-size: clamp(0.8rem, 2.8vw, 0.9rem);">
+                                                    Almost Knew
+                                                </div>
+                                                <div class="rating-subtitle text-muted d-none d-md-block" style="font-size: 0.75rem;">
+                                                    Review later
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rating-shortcut">
+                                            <kbd style="font-size: clamp(0.7rem, 2.2vw, 0.8rem);">2</kbd>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Knew It -->
+                            <div class="col-4">
+                                <div class="rating-button-wrapper">
+                                    <button onclick="rateCard(3)" 
+                                            class="btn rating-btn rating-btn-3 w-100 h-100 py-2 py-md-3">
+                                        <div class="rating-btn-content">
+                                            <div class="rating-icon mb-1">
+                                                <i class="bi bi-check-circle-fill" style="font-size: clamp(1.25rem, 4vw, 1.5rem);"></i>
+                                            </div>
+                                            <div class="rating-text">
+                                                <div class="rating-title fw-semibold" style="font-size: clamp(0.8rem, 2.8vw, 0.9rem);">
+                                                    Knew It
+                                                </div>
+                                                <div class="rating-subtitle text-muted d-none d-md-block" style="font-size: 0.75rem;">
+                                                    Mastered
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rating-shortcut">
+                                            <kbd style="font-size: clamp(0.7rem, 2.2vw, 0.8rem);">3</kbd>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Alternative: Simple Button Row (for very small screens) -->
+                    <div class="simple-rating-buttons d-md-none mt-3">
+                        <div class="row g-1">
+                            <div class="col-4">
+                                <button onclick="rateCard(1)" 
+                                        class="btn btn-outline-danger w-100 py-2"
+                                        style="font-size: 0.75rem;">
+                                    <i class="bi bi-x me-1"></i> No
+                                </button>
+                            </div>
+                            <div class="col-4">
+                                <button onclick="rateCard(2)" 
+                                        class="btn btn-outline-warning w-100 py-2"
+                                        style="font-size: 0.75rem;">
+                                    <i class="bi bi-clock me-1"></i> Almost
+                                </button>
+                            </div>
+                            <div class="col-4">
+                                <button onclick="rateCard(3)" 
+                                        class="btn btn-outline-success w-100 py-2"
+                                        style="font-size: 0.75rem;">
+                                    <i class="bi bi-check me-1"></i> Yes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Skip Option -->
+                    <div class="text-center mt-3 mt-md-4">
+                        <button onclick="skipCurrentCard()" 
+                                class="btn btn-outline-secondary btn-sm py-1 px-3"
+                                style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">
+                            <i class="bi bi-forward me-1"></i> Skip Card
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Overview -->
+        <div class="progress-overview mt-4">
+            <div class="row g-2 g-md-3">
+                <div class="col-4">
+                    <div class="stat-card text-center p-2 p-md-3 rounded-3 bg-primary bg-opacity-10">
+                        <div class="stat-value text-primary fw-bold" id="progress-cards" style="font-size: clamp(1.25rem, 5vw, 1.75rem);">0</div>
+                        <div class="stat-label text-muted small" style="font-size: clamp(0.7rem, 2.2vw, 0.8rem);">Studied</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="stat-card text-center p-2 p-md-3 rounded-3 bg-success bg-opacity-10">
+                        <div class="stat-value text-success fw-bold" id="progress-mastered" style="font-size: clamp(1.25rem, 5vw, 1.75rem);">0</div>
+                        <div class="stat-label text-muted small" style="font-size: clamp(0.7rem, 2.2vw, 0.8rem);">Mastered</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="stat-card text-center p-2 p-md-3 rounded-3 bg-warning bg-opacity-10">
+                        <div class="stat-value text-warning fw-bold" id="progress-review" style="font-size: clamp(1.25rem, 5vw, 1.75rem);">0</div>
+                        <div class="stat-label text-muted small" style="font-size: clamp(0.7rem, 2.2vw, 0.8rem);">To Review</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="mt-3 mt-md-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <small class="text-muted" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">Progress</small>
+                    <small class="text-muted" id="progress-percent" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">0%</small>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div id="learn-progress-bar" class="progress-bar" 
+                         role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completion Screen -->
+    <div id="learn-complete" class="completion-screen" style="display: none;">
+        <div class="card border-0 shadow-lg bg-gradient-success">
+            <div class="card-body p-4 p-md-5 text-center text-white">
+                <div class="mb-3 mb-md-4">
+                    <i class="bi bi-trophy" style="font-size: clamp(3rem, 15vw, 4rem);"></i>
+                </div>
+                <h2 class="text-white mb-3" style="font-size: clamp(1.5rem, 6vw, 2rem);">Study Complete! 🎉</h2>
+                <div id="learn-summary" class="text-white-75 mb-3 mb-md-4"></div>
+                <div class="d-flex flex-column flex-md-row flex-wrap gap-2 justify-content-center">
+                    <button onclick="restartLearnMode()" 
+                            class="btn btn-light px-4 py-2"
+                            style="font-size: clamp(0.9rem, 3vw, 1rem);">
+                        <i class="bi bi-arrow-repeat me-2"></i> Study Again
+                    </button>
+                    <a href="{% url 'quizlet_copy:set-detail' set.pk %}" 
+                       class="btn btn-outline-light px-4 py-2"
+                       style="font-size: clamp(0.9rem, 3vw, 1rem);">
+                        <i class="bi bi-arrow-left me-2"></i> Back to Set
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Main Container */
+    .learn-mode-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 0.5rem;
+    }
+    
+    @media (min-width: 768px) {
+        .learn-mode-container {
+            padding: 0 1rem;
+        }
+    }
+    
+    /* Study Card */
+    .study-card {
+        transition: transform 0.3s ease;
+    }
+    
+    .card-border {
+        border: 2px solid #e9ecef;
+        border-radius: 16px;
+    }
+    
+    .term-display {
+        min-height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 12px;
+        border: 1px solid #dee2e6;
+    }
+    
+    @media (min-width: 768px) {
+        .term-display {
+            min-height: 120px;
+            padding: 2rem;
+        }
+    }
+    
+    .definition-display {
+        min-height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e7f5ff 100%);
+        border-radius: 12px;
+        border: 1px solid #cfe2ff;
+    }
+    
+    @media (min-width: 768px) {
+        .definition-display {
+            min-height: 120px;
+            padding: 2rem;
+        }
+    }
+    
+    .separator {
+        display: flex;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .separator-line {
+        flex: 1;
+        height: 1px;
+        background-color: #dee2e6;
+    }
+    
+    .separator-text {
+        padding: 0 1rem;
+        color: #6c757d;
+    }
+    
+    /* COMPACT RATING BUTTONS */
+    .rating-buttons-compact {
+        margin: 0 auto;
+        max-width: 600px;
+    }
+    
+    .rating-button-wrapper {
+        height: 100%;
+    }
+    
+    .rating-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid transparent;
+        border-radius: 12px;
+        transition: all 0.2s ease;
+        position: relative;
+        min-height: 90px;
+    }
+    
+    @media (min-width: 768px) {
+        .rating-btn {
+            min-height: 110px;
+            border-radius: 16px;
+        }
+    }
+    
+    .rating-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .rating-btn:active {
+        transform: translateY(0);
+    }
+    
+    .rating-btn-1 {
+        background: linear-gradient(135deg, #fee, #fff5f5);
+        color: #dc3545;
+    }
+    
+    .rating-btn-1:hover {
+        border-color: #dc3545;
+        background: #fff5f5;
+    }
+    
+    .rating-btn-2 {
+        background: linear-gradient(135deg, #ffebcc, #fff3cd);
+        color: #ffc107;
+    }
+    
+    .rating-btn-2:hover {
+        border-color: #ffc107;
+        background: #fff3cd;
+    }
+    
+    .rating-btn-3 {
+        background: linear-gradient(135deg, #d4edda, #d1e7dd);
+        color: #198754;
+    }
+    
+    .rating-btn-3:hover {
+        border-color: #198754;
+        background: #d1e7dd;
+    }
+    
+    .rating-btn-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+    }
+    
+    .rating-text {
+        text-align: center;
+    }
+    
+    .rating-subtitle {
+        font-size: 0.75rem;
+        margin-top: 0.125rem;
+    }
+    
+    .rating-shortcut {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+    }
+    
+    .rating-shortcut kbd {
+        background: #6c757d;
+        color: white;
+        padding: 0.125rem 0.375rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+    }
+    
+    /* Simple Rating Buttons (for very small screens) */
+    .simple-rating-buttons .btn {
+        font-weight: 500;
+    }
+    
+    /* Progress Stats */
+    .stat-card {
+        transition: transform 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #198754 0%, #157347 100%);
+    }
+    
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .rating-panel {
+        animation: fadeIn 0.5s ease;
+    }
+    
+    /* Touch-friendly adjustments */
+    @media (hover: none) and (pointer: coarse) {
+        .rating-btn {
+            min-height: 80px;
+            border-width: 1px;
+        }
+        
+        .rating-btn:active {
+            opacity: 0.8;
+        }
+        
+        .rating-shortcut {
+            display: none; /* Hide shortcut on mobile for cleaner look */
+        }
+    }
+    
+    /* Extra small screens */
+    @media (max-width: 375px) {
+        .rating-btn {
+            min-height: 70px;
+            padding: 0.5rem !important;
+        }
+        
+        .rating-icon i {
+            font-size: 1rem !important;
+        }
+        
+        .rating-title {
+            font-size: 0.75rem !important;
+        }
+    }
+    
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .card-border {
+            border-color: #495057;
+            background-color: #212529;
+        }
+        
+        .term-display {
+            background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+            border-color: #6c757d;
+        }
+        
+        .definition-display {
+            background: linear-gradient(135deg, #1c2a3a 0%, #2d3748 100%);
+            border-color: #4a5568;
+        }
+        
+        .rating-btn-1 {
+            background: linear-gradient(135deg, #3a1c1c, #4a2626);
+        }
+        
+        .rating-btn-2 {
+            background: linear-gradient(135deg, #3a321c, #4a4226);
+        }
+        
+        .rating-btn-3 {
+            background: linear-gradient(135deg, #1c3a2c, #264a36);
+        }
+    }
+</style>
+
+<!-- Keep the existing JavaScript code - it will work with the new HTML structure -->
+<script>
+    // ========== ENHANCED LEARN MODE LOGIC WITH PROGRESS TRACKING ==========
+    
+    // Get card data from Django context
+    const allCards = JSON.parse('{{ cards_json|escapejs }}') || [];
+    
+    // If empty, create fallback
+    if (allCards.length === 0) {
+        allCards.push(
+            {id: 1, term: "Sample Term 1", definition: "Sample Definition 1", timesStudied: 0, mastered: false, confidence: 0},
+            {id: 2, term: "Sample Term 2", definition: "Sample Definition 2", timesStudied: 0, mastered: false, confidence: 0}
+        );
+    }
+    
+    // Learning algorithm data
+    let learningQueue = [];
+    let masteredCards = [];
+    let reviewCards = [];
+    let currentCard = null;
+    let isDefinitionRevealed = false;
+    
+    // Stats
+    let totalStudied = 0;
+    let totalMastered = 0;
+    let sessionStartTime = new Date();
+    
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // Function to save progress to server
+    async function saveProgressToServer(flashcardId, confidence) {
+        try {
+            const response = await fetch('{% url "quizlet_copy:record-progress" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    flashcard_id: flashcardId,
+                    confidence: confidence
+                })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                console.log('Progress saved:', data.progress);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error saving progress:', error);
+            // Fallback - save locally
+            localStorage.setItem(`progress_${flashcardId}`, JSON.stringify({
+                confidence: confidence,
+                timestamp: new Date().toISOString()
+            }));
+            return false;
+        }
+    }
+    
+    // Function to load progress summary
+    async function loadProgressSummary() {
+        try {
+            const response = await fetch('{% url "quizlet_copy:progress-summary" set.pk %}');
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Update the progress overview with real data
+                document.getElementById('progress-cards').textContent = data.studied_cards || 0;
+                document.getElementById('progress-mastered').textContent = data.mastered_cards || 0;
+                document.getElementById('progress-review').textContent = data.cards_due || 0;
+                
+                // Update progress bar
+                const progressPercent = data.mastery_percentage || 0;
+                document.getElementById('progress-percent').textContent = `${progressPercent}%`;
+                document.getElementById('learn-progress-bar').style.width = `${progressPercent}%`;
+            }
+        } catch (error) {
+            console.error('Error loading progress summary:', error);
+        }
+    }
+    
+    // Initialize learn mode
+    function initLearnMode() {
+        // Reset everything
+        learningQueue = [...allCards];
+        masteredCards = [];
+        reviewCards = [];
+        currentCard = null;
+        isDefinitionRevealed = false;
+        
+        totalStudied = 0;
+        totalMastered = 0;
+        sessionStartTime = new Date();
+        
+        // Separate cards based on existing mastery
+        allCards.forEach(card => {
+            if (card.mastered) {
+                masteredCards.push(card);
+                totalMastered++;
+            }
+        });
+        
+        // Filter out mastered cards from learning queue
+        learningQueue = learningQueue.filter(card => !card.mastered);
+        
+        // Initialize counts from existing data
+        totalStudied = allCards.reduce((sum, card) => sum + (card.timesStudied || 0), 0);
+        
+        // Shuffle initial queue
+        shuffleArray(learningQueue);
+        
+        // Show study container
+        document.getElementById('learn-container').style.display = 'block';
+        document.getElementById('learn-complete').style.display = 'none';
+        document.getElementById('rating-panel').style.display = 'none';
+        
+        // Hide simple rating buttons by default (show only on very small screens if needed)
+        document.querySelector('.simple-rating-buttons').style.display = 'none';
+        
+        // Start with first card
+        showNextLearnCard();
+        updateProgressDisplay();
+        
+        // Load progress summary
+        loadProgressSummary();
+    }
+    
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+    
+    function showNextLearnCard() {
+        // Check completion
+        if (learningQueue.length === 0 && reviewCards.length === 0) {
+            completeLearnMode();
+            return;
+        }
+        
+        // Get next card (prefer learning queue, then review)
+        if (learningQueue.length > 0) {
+            currentCard = learningQueue[0];
+        } else if (reviewCards.length > 0) {
+            currentCard = reviewCards[0];
+        }
+        
+        if (!currentCard) return;
+        
+        // Update display
+        document.getElementById('learn-term').innerHTML = `<p class="display-6 fw-semibold mb-0" style="font-size: clamp(1.5rem, 6vw, 2.5rem);">${currentCard.term}</p>`;
+        document.getElementById('learn-definition').innerHTML = `<p class="h4 fw-normal text-dark mb-0" style="font-size: clamp(1.1rem, 4vw, 1.5rem);">${currentCard.definition}</p>`;
+        document.getElementById('definition-side').style.display = 'none';
+        
+        // Reset reveal button
+        const revealBtn = document.getElementById('reveal-btn');
+        revealBtn.innerHTML = '<i class="bi bi-eye me-2"></i> Reveal Definition';
+        revealBtn.disabled = false;
+        revealBtn.classList.remove('btn-secondary');
+        revealBtn.classList.add('btn-primary');
+        
+        // Hide rating panel
+        document.getElementById('rating-panel').style.display = 'none';
+        
+        // Update card position
+        const cardsLeft = learningQueue.length + reviewCards.length;
+        const cardsDone = allCards.length - cardsLeft + 1;
+        document.getElementById('card-position').textContent = cardsDone;
+        document.getElementById('times-studied').textContent = currentCard.timesStudied || 0;
+        
+        isDefinitionRevealed = false;
+        updateProgressDisplay();
+    }
+    
+    function revealDefinition() {
+        document.getElementById('definition-side').style.display = 'block';
+        
+        const revealBtn = document.getElementById('reveal-btn');
+        revealBtn.innerHTML = '<i class="bi bi-check me-2"></i> Definition Revealed';
+        revealBtn.disabled = true;
+        revealBtn.classList.remove('btn-primary');
+        revealBtn.classList.add('btn-secondary');
+        
+        // Show rating panel
+        document.getElementById('rating-panel').style.display = 'block';
+        
+        // On very small screens, show simple buttons instead
+        if (window.innerWidth < 400) {
+            document.querySelector('.rating-buttons-compact').style.display = 'none';
+            document.querySelector('.simple-rating-buttons').style.display = 'block';
+        } else {
+            document.querySelector('.rating-buttons-compact').style.display = 'block';
+            document.querySelector('.simple-rating-buttons').style.display = 'none';
+        }
+        
+        isDefinitionRevealed = true;
+    }
+    
+    async function rateCard(rating) {
+        if (!currentCard || !isDefinitionRevealed) return;
+        
+        // Save progress to server
+        const saved = await saveProgressToServer(currentCard.id, rating);
+        
+        if (saved) {
+            // Update card stats locally
+            currentCard.timesStudied = (currentCard.timesStudied || 0) + 1;
+            currentCard.confidence = rating;
+            currentCard.mastered = rating === 3;
+            
+            // Remove from current queue
+            if (learningQueue.length > 0 && learningQueue[0].id === currentCard.id) {
+                learningQueue.shift();
+            } else if (reviewCards.length > 0 && reviewCards[0].id === currentCard.id) {
+                reviewCards.shift();
+            }
+            
+            totalStudied++;
+            
+            // Handle rating
+            switch(rating) {
+                case 1: // Didn't know
+                    currentCard.status = 'review';
+                    reviewCards.push(currentCard);
+                    break;
+                    
+                case 2: // Almost knew
+                    currentCard.status = 'learning';
+                    learningQueue.push(currentCard);
+                    break;
+                    
+                case 3: // Knew it
+                    currentCard.status = 'mastered';
+                    masteredCards.push(currentCard);
+                    totalMastered++;
+                    break;
+            }
+            
+            // Show next card with smooth transition
+            setTimeout(() => {
+                showNextLearnCard();
+                // Reload progress summary after rating
+                loadProgressSummary();
+            }, 300);
+        } else {
+            alert('Failed to save progress. Please check your connection.');
+        }
+    }
+    
+    function skipCurrentCard() {
+        if (!currentCard) return;
+        
+        // Move to review queue
+        reviewCards.push(currentCard);
+        currentCard.status = 'skipped';
+        
+        // Remove from current queue
+        if (learningQueue.length > 0) {
+            learningQueue.shift();
+        }
+        
+        showNextLearnCard();
+    }
+    
+    function updateProgressDisplay() {
+        const totalCards = allCards.length;
+        const cardsLeft = learningQueue.length + reviewCards.length;
+        const cardsDone = totalCards - cardsLeft;
+        const progressPercent = Math.round((cardsDone / totalCards) * 100);
+        
+        // Update progress bar
+        const progressBar = document.getElementById('learn-progress-bar');
+        progressBar.style.width = `${progressPercent}%`;
+        
+        // Update bar color based on progress
+        if (progressPercent >= 75) {
+            progressBar.className = 'progress-bar bg-success';
+        } else if (progressPercent >= 50) {
+            progressBar.className = 'progress-bar bg-info';
+        } else if (progressPercent >= 25) {
+            progressBar.className = 'progress-bar bg-warning';
+        } else {
+            progressBar.className = 'progress-bar bg-danger';
+        }
+        
+        // Update stats
+        document.getElementById('progress-cards').textContent = cardsDone;
+        document.getElementById('progress-mastered').textContent = totalMastered;
+        document.getElementById('progress-review').textContent = reviewCards.length;
+        document.getElementById('progress-percent').textContent = `${progressPercent}%`;
+    }
+    
+    function completeLearnMode() {
+        // Calculate session stats
+        const sessionEndTime = new Date();
+        const sessionDuration = Math.round((sessionEndTime - sessionStartTime) / 1000 / 60); // minutes
+        const masteryPercentage = Math.round((totalMastered / allCards.length) * 100);
+        
+        // Update summary
+        const summary = document.getElementById('learn-summary');
+        summary.innerHTML = `
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h3 class="fw-bold">${masteryPercentage}%</h3>
+                                <p class="small mb-0">Mastery Rate</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h3 class="fw-bold">${sessionDuration}</h3>
+                                <p class="small mb-0">Minutes</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="${masteryPercentage >= 80 ? 'text-white' : 'text-white-75'}">
+                        ${masteryPercentage >= 80 ? 'Excellent work! You\'ve mastered this set!' :
+                          masteryPercentage >= 60 ? 'Great progress! Keep practicing for mastery.' :
+                          'Good start! Review again to improve retention.'}
+                    </p>
+                </div>
+            </div>
+        `;
+        
+        // Show completion screen
+        document.getElementById('learn-container').style.display = 'none';
+        document.getElementById('learn-complete').style.display = 'block';
+    }
+    
+    function restartLearnMode() {
+        // Instead of just calling initLearnMode(), we should reload the page
+        // with a reset parameter to get fresh data from the server
+        const url = new URL(window.location.href);
+        url.searchParams.set('reset', 'true');
+        url.searchParams.set('mode', 'learn');
+        
+        // Remove any hash from URL
+        url.hash = '';
+        
+        // Reload the page with reset parameter
+        window.location.href = url.toString();
+    }
+        
+    // ========== KEYBOARD SHORTCUTS ==========
+    document.addEventListener('keydown', function(e) {
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement.tagName === 'INPUT' || 
+                              activeElement.tagName === 'TEXTAREA';
+        
+        if (isInputFocused) return;
+        
+        switch(e.key) {
+            case ' ':  // Space
+            case 'Enter':
+                e.preventDefault();
+                if (!isDefinitionRevealed) {
+                    revealDefinition();
+                } else {
+                    // Auto-rate with middle option
+                    rateCard(2);
+                }
+                break;
+                
+            case '1':
+                e.preventDefault();
+                if (isDefinitionRevealed) rateCard(1);
+                break;
+                
+            case '2':
+                e.preventDefault();
+                if (isDefinitionRevealed) rateCard(2);
+                break;
+                
+            case '3':
+                e.preventDefault();
+                if (isDefinitionRevealed) rateCard(3);
+                break;
+                
+            case 'n':
+            case 'N':
+                e.preventDefault();
+                skipCurrentCard();
+                break;
+        }
+    });
+    
+    // ========== TOUCH OPTIMIZATIONS ==========
+    if ('ontouchstart' in window) {
+        // Add touch feedback for rating buttons
+        document.querySelectorAll('.rating-btn, .simple-rating-buttons .btn').forEach(button => {
+            button.addEventListener('touchstart', function() {
+                this.style.opacity = '0.8';
+            });
+            
+            button.addEventListener('touchend', function() {
+                this.style.opacity = '1';
+            });
+        });
+    }
+    
+    // ========== RESPONSIVE ADJUSTMENTS ==========
+    function handleResize() {
+        if (isDefinitionRevealed) {
+            if (window.innerWidth < 400) {
+                document.querySelector('.rating-buttons-compact').style.display = 'none';
+                document.querySelector('.simple-rating-buttons').style.display = 'block';
+            } else {
+                document.querySelector('.rating-buttons-compact').style.display = 'block';
+                document.querySelector('.simple-rating-buttons').style.display = 'none';
+            }
+        }
+    }
+    
+    window.addEventListener('resize', handleResize);
+    
+    // ========== INITIALIZATION ==========
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            initLearnMode();
+        }, 100);
+    });
+</script>

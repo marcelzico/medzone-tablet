@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block title %}Study {{ set.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h5>Study Modes</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="?mode=flashcards" 
+                   class="list-group-item list-group-item-action {% if mode == 'flashcards' %}active{% endif %}">
+                    📝 Flashcards
+                </a>
+                <a href="?mode=learn" 
+                   class="list-group-item list-group-item-action {% if mode == 'learn' %}active{% endif %}">
+                    🧠 Learn
+                </a>
+                <a href="?mode=write" 
+                   class="list-group-item list-group-item-action {% if mode == 'write' %}active{% endif %}">
+                    ✍️ Write
+                </a>
+                {% comment %} <a href="{% url 'quizlet_copy:match-game' set.pk %}" 
+                   class="list-group-item list-group-item-action">
+                    🎮 Match Game
+                </a> {% endcomment %}
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'quizlet_copy:set-detail' set.pk %}" class="btn btn-outline-secondary btn-sm">
+                    ← Back to Set
+                </a>
+            </div>
+        </div>
+        
+        {% comment %} <!-- Quick Help Card -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6>Quick Help</h6>
+            </div>
+            <div class="card-body small">
+                <p><strong>Current Mode:</strong> {{ mode|title }}</p>
+                <p>Check the bottom of the study area for specific keyboard shortcuts.</p>
+            </div>
+        </div> {% endcomment %}
+    </div>
+    
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4>Studying: {{ set.title }}</h4>
+                    <span class="badge bg-primary">{{ cards|length }} cards</span>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                {% if mode == 'flashcards' %}
+                    {% include 'quizlet_copy/partials/flashcard_mode.html' %}
+                {% elif mode == 'learn' %}
+                    {% include 'quizlet_copy/partials/learn_mode.html' %}
+                {% elif mode == 'write' %}
+                    {% include 'quizlet_copy/partials/write_mode.html' %}
+                {% else %}
+                    {% include 'quizlet_copy/partials/flashcard_mode.html' %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    let cards = {{ cards|safe }};
+    let currentIndex = 0;
+    
+    function flipCard() {
+        const card = document.getElementById('flashcard');
+        const front = card.querySelector('.flashcard-front');
+        const back = card.querySelector('.flashcard-back');
+        
+        if (front.style.display !== 'none') {
+            front.style.display = 'none';
+            back.style.display = 'block';
+        } else {
+            front.style.display = 'block';
+            back.style.display = 'none';
+        }
+    }
+    
+    function updateCard() {
+        document.getElementById('card-term').textContent = cards[currentIndex].term;
+        document.getElementById('card-definition').textContent = cards[currentIndex].definition;
+        document.getElementById('progress').textContent = `${currentIndex + 1} / ${cards.length}`;
+        
+        // Reset to front
+        document.querySelector('.flashcard-front').style.display = 'block';
+        document.querySelector('.flashcard-back').style.display = 'none';
+    }
+    
+    function nextCard() {
+        if (currentIndex < cards.length - 1) {
+            currentIndex++;
+            updateCard();
+        }
+    }
+    
+    function prevCard() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            updateCard();
+        }
+    }
+    
+    function shuffleCards() {
+        // Simple Fisher-Yates shuffle
+        for (let i = cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cards[i], cards[j]] = [cards[j], cards[i]];
+        }
+        currentIndex = 0;
+        updateCard();
+    }
+
+    // Flashcard flip functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const flashcard = document.getElementById('flashcard');
+        if (flashcard) {
+            flashcard.addEventListener('click', function() {
+                this.classList.toggle('flipped');
+            });
+        }
+        
+        // Navigation between cards
+        let currentCardIndex = 0;
+        const cards = document.querySelectorAll('.flashcard-item');
+        
+        window.showCard = function(index) {
+            cards.forEach(card => card.classList.add('d-none'));
+            cards[index].classList.remove('d-none');
+            currentCardIndex = index;
+            updateProgress();
+        }
+        
+        window.nextCard = function() {
+            if (currentCardIndex < cards.length - 1) {
+                showCard(currentCardIndex + 1);
+            }
+        }
+        
+        window.prevCard = function() {
+            if (currentCardIndex > 0) {
+                showCard(currentCardIndex - 1);
+            }
+        }
+        
+        function updateProgress() {
+            document.getElementById('progress').textContent = 
+                `${currentCardIndex + 1} / ${cards.length}`;
+        }
+        
+        // Initialize first card
+        if (cards.length > 0) {
+            showCard(0);
+        }
+    });
+</script>
+
+{% endblock %}

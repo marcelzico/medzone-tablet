@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Accueil - Naviguer sur les ensembles{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Ensemble de carte publique</h1>
+
+{% if sets %}
+    <div class="text-end m-2">
+        <a href="{% url 'quizlet_copy:my-sets' %}" class="btn btn-primary">Voir mon propre ensmelble</a>
+    </div>
+    <div class="row">
+        {% for set in sets %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ set.title }}</h5>
+                        <p class="card-text text-muted">
+                            {{ set.description|truncatechars:100 }}
+                        </p>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                Par {{ set.created_by.username }} • 
+                                {{ set.cards.count }} Cartes
+                            </small>
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'quizlet_copy:set-detail' set.pk %}" class="btn btn-outline-primary btn-sm">Voir</a>
+                        <a href="{% url 'quizlet_copy:study' set.pk %}" class="btn btn-success btn-sm">Apprendre</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        Il n'y a pas encore d'ensemble public disponible. 
+        {% if user.is_authenticated and user.is_staff %}
+            <a href="{% url 'quizlet_copy:set-create' %}">Créer le premier en ensemble</a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

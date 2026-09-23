@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}Modifier la carte{% else %}Ajouter la carte{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>
+                    {% if object %}
+                        Modifier la carte
+                    {% else %}
+                        Ajouter une carte dans "{{ set.title }}"
+                    {% endif %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_term" class="form-label">Terme *</label>
+                        <textarea name="term" class="form-control" id="id_term" 
+                                  rows="2" required>{{ form.term.value|default:'' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_definition" class="form-label">Définition *</label>
+                        <textarea name="definition" class="form-control" id="id_definition" 
+                                  rows="3" required>{{ form.definition.value|default:'' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_order" class="form-label">Ordre (Facultatif)</label>
+                        <input type="number" name="order" class="form-control" id="id_order" 
+                               value="{{ form.order.value|default:'0' }}">
+                        <small class="form-text text-muted">Le numéro le plus petit en premier</small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        {% if object %}
+                            <a href="{% url 'quizlet_copy:set-detail' object.flashcard_set.pk %}" class="btn btn-secondary">
+                                Annuler
+                            </a>
+                        {% else %}
+                            <a href="{% url 'quizlet_copy:set-detail' set.pk %}" class="btn btn-secondary">
+                                Annuler
+                            </a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary">
+                            {% if object %}Modifier{% else %}Ajouter{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

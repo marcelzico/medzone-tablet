@@ -1,0 +1,102 @@
+<div id="flashcard-container" class="text-center">
+    <div class="flashcard" id="flashcard">
+        <div class="flashcard-inner">
+            <div class="flashcard-front">
+                <h3 id="card-term">Chargement...</h3>
+                <p class="text-muted mt-3">Cliquer pour tourner</p>
+            </div>
+            <div class="flashcard-back">
+                <h3 id="card-definition">Chargement...</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <div class="btn-group" role="group">
+            <button onclick="prevCard()" class="btn btn-secondary">← Précédent</button>
+            <button onclick="flipCard()" class="btn btn-primary">Tourner la carte</button>
+            <button onclick="nextCard()" class="btn btn-secondary">Suivant →</button>
+        </div>
+        <div class="mt-3">
+            <button onclick="shuffleCards()" class="btn btn-outline-warning btn-sm">🔀 Mode aléatoire</button>
+            <button onclick="resetCards()" class="btn btn-outline-info btn-sm">🔄 Récommencer</button>
+        </div>
+        <div class="mt-2">
+            <span id="progress" class="badge bg-info">1 / {{ cards|length }}</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Card data from Django
+    const cards = [
+        {% for card in cards %}
+            {
+                id: {{ card.id }},
+                terme: "{{ card.term|escapejs }}",
+                définition: "{{ card.definition|escapejs }}"
+            },
+        {% endfor %}
+    ];
+    
+    let currentIndex = 0;
+    let isFlipped = false;
+    
+    function updateCard() {
+        document.getElementById('card-term').textContent = cards[currentIndex].term;
+        document.getElementById('card-definition').textContent = cards[currentIndex].definition;
+        document.getElementById('progress').textContent = `${currentIndex + 1} / ${cards.length}`;
+        
+        // Reset to front
+        document.getElementById('flashcard').classList.remove('flipped');
+        isFlipped = false;
+    }
+    
+    function flipCard() {
+        const card = document.getElementById('flashcard');
+        card.classList.toggle('flipped');
+        isFlipped = !isFlipped;
+    }
+    
+    function nextCard() {
+        if (currentIndex < cards.length - 1) {
+            currentIndex++;
+            updateCard();
+        }
+    }
+    
+    function prevCard() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            updateCard();
+        }
+    }
+    
+    function shuffleCards() {
+        // Fisher-Yates shuffle
+        for (let i = cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cards[i], cards[j]] = [cards[j], cards[i]];
+        }
+        currentIndex = 0;
+        updateCard();
+    }
+    
+    function resetCards() {
+        // Reload page to get original order
+        window.location.reload();
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') nextCard();
+        if (e.key === 'ArrowLeft') prevCard();
+        if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            flipCard();
+        }
+    });
+    
+    // Initialize first card
+    updateCard();
+</script>

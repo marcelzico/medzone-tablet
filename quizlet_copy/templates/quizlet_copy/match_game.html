@@ -1,0 +1,1334 @@
+{% extends 'base.html' %}
+
+{% block title %}Jeux de liaison - {{ set.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Game Header - Mobile Optimized -->
+    <div class="game-header sticky-top bg-white shadow-sm py-2 px-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <a href="{% url 'quizlet_copy:study' set.pk %}" class="btn btn-sm btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="h5 fw-bold mb-0" style="font-size: clamp(1rem, 3.5vw, 1.25rem);">
+                        <i class="bi bi-puzzle me-2"></i>Jeux de liaison
+                    </h1>
+                    <p class="text-muted mb-0 small" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">
+                        {{ set.title }} • 
+                        <span id="game-info">0 paires séléctionnées</span>
+                    </p>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" 
+                            type="button" 
+                            data-bs-toggle="dropdown"
+                            style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">
+                        <i class="bi bi-gear me-1"></i> Paramètres
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <div class="dropdown-item-text">
+                                <small class="text-muted">Nombre limite de carte</small>
+                                <select id="card-limit" class="form-select form-select-sm mt-1">
+                                    <option value="6">6 cartes (3 paires)</option>
+                                    <option value="8" selected>8 cartes (4 paires)</option>
+                                    <option value="10">10 cartes (5 paires)</option>
+                                    <option value="12">12 cartes (6 paires)</option>
+                                </select>
+                            </div>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <button class="dropdown-item" onclick="newGame()">
+                                <i class="bi bi-arrow-repeat me-2"></i> Nouveau jeux
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Stats Bar -->
+    <div class="stats-bar bg-light py-2 px-3 border-bottom">
+        <div class="row align-items-center g-2">
+            <div class="col-4">
+                <div class="text-center">
+                    <div class="stat-value fw-bold text-primary" id="timer" style="font-size: clamp(1.25rem, 4vw, 1.5rem);">60</div>
+                    <small class="text-muted" style="font-size: clamp(0.7rem, 2.2vw, 0.8rem);">
+                        <i class="bi bi-clock me-1"></i> Temps
+                    </small>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="text-center">
+                    <div class="stat-value fw-bold text-success" id="score" style="font-size: clamp(1.25rem, 4vw, 1.5rem);">0</div>
+                    <small class="text-muted" style="font-size: clamp(0.7rem, 2.2vw, 0.8rem);">
+                        <i class="bi bi-star me-1"></i> Score
+                    </small>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="text-center">
+                    <div class="stat-value fw-bold text-info" id="matches" style="font-size: clamp(1.25rem, 4vw, 1.5rem);">0/0</div>
+                    <small class="text-muted" style="font-size: clamp(0.7rem, 2.2vw, 0.8rem);">
+                        <i class="bi bi-check-circle me-1"></i> Liaisons
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selection Indicator - Mobile Optimized -->
+    <div class="selection-indicator px-3 py-2 bg-light border-bottom d-none" id="selection-indicator">
+        <div class="row align-items-center g-2">
+            <div class="col-5">
+                <div class="selected-card p-2 bg-white rounded border border-primary">
+                    <small class="text-primary d-block mb-1" style="font-size: clamp(0.7rem, 2.2vw, 0.8rem);">
+                        <i class="bi bi-card-text me-1"></i> Terme
+                    </small>
+                    <div id="selected-term" class="selected-content small text-truncate" style="font-size: clamp(0.8rem, 2.8vw, 0.9rem);">
+                        <em class="text-muted">toucher sur un terme</em>
+                    </div>
+                </div>
+            </div>
+            <div class="col-2 text-center">
+                <i class="bi bi-arrow-left-right text-muted"></i>
+            </div>
+            <div class="col-5">
+                <div class="selected-card p-2 bg-white rounded border border-success">
+                    <small class="text-success d-block mb-1" style="font-size: clamp(0.7rem, 2.2vw, 0.8rem);">
+                        <i class="bi bi-book me-1"></i> Définition
+                    </small>
+                    <div id="selected-definition" class="selected-content small text-truncate" style="font-size: clamp(0.8rem, 2.8vw, 0.9rem);">
+                        <em class="text-muted">Toucher sur la défintion</em>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Area - Two Column Layout (Mobile Friendly) -->
+    <div class="game-area-container">
+        <!-- Mobile Instructions -->
+        <div class="instructions-alert alert alert-info mx-3 mt-3 mb-2 p-2 d-md-none" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-info-circle me-2"></i>
+                <div>
+                    <strong>Comment jouer :</strong> Séléctionner le terme dans la colonne gauche et la définition correspondante à dans la colonne droite. Ils vont disparaître s'ils sont vraiment le paire!
+                </div>
+            </div>
+        </div>
+
+        <!-- Two Column Game Board -->
+        <div class="game-board row g-0 g-md-3 mx-0">
+            <!-- Terms Column -->
+            <div class="col-12 col-md-6 px-2 px-md-3 mb-3 mb-md-0">
+                <div class="column-header bg-primary bg-opacity-10 p-2 rounded-top">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-bold text-primary mb-0" style="font-size: clamp(0.9rem, 3vw, 1rem);">
+                                <i class="bi bi-card-text me-2"></i> Termes
+                            </h6>
+                        </div>
+                        <div class="column-progress">
+                            <span class="badge bg-primary rounded-pill" id="terms-progress">0/0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cards-column terms-column" id="terms-column">
+                    <!-- Terms cards will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Definitions Column -->
+            <div class="col-12 col-md-6 px-2 px-md-3">
+                <div class="column-header bg-success bg-opacity-10 p-2 rounded-top">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-bold text-success mb-0" style="font-size: clamp(0.9rem, 3vw, 1rem);">
+                                <i class="bi bi-book me-2"></i> Définitions
+                            </h6>
+                        </div>
+                        <div class="column-progress">
+                            <span class="badge bg-success rounded-pill" id="definitions-progress">0/0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cards-column definitions-column" id="definitions-column">
+                    <!-- Definitions cards will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Match Feedback -->
+        <div class="match-feedback mx-3 mt-3">
+            <div id="match-feedback" class="text-center" style="min-height: 24px;"></div>
+        </div>
+
+        <!-- Game Controls -->
+        <div class="game-controls px-3 py-3">
+            <div class="row g-2">
+                <div class="col-4">
+                    <button onclick="startGame()" id="start-btn" class="btn btn-success w-100 py-2">
+                        <i class="bi bi-play-fill me-1"></i>
+                        <span class="d-none d-sm-inline">Commencer</span>
+                    </button>
+                </div>
+                <div class="col-4">
+                    <button onclick="pauseGame()" id="pause-btn" class="btn btn-warning w-100 py-2" disabled>
+                        <i class="bi bi-pause-fill me-1"></i>
+                        <span class="d-none d-sm-inline">Pause</span>
+                    </button>
+                </div>
+                <div class="col-4">
+                    <button onclick="useHint()" id="hint-btn" class="btn btn-info w-100 py-2" disabled>
+                        <i class="bi bi-lightbulb me-1"></i>
+                        <span class="d-none d-sm-inline">Indices</span>
+                        <span id="hint-count" class="badge bg-dark ms-1">3</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Additional Controls -->
+            <div class="row g-2 mt-2">
+                <div class="col-6">
+                    <button onclick="clearSelection()" class="btn btn-outline-secondary w-100 py-2">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Finir
+                    </button>
+                </div>
+                <div class="col-6">
+                    <button onclick="resetGame()" class="btn btn-outline-danger w-100 py-2">
+                        <i class="bi bi-arrow-clockwise me-1"></i>
+                        Récommencer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-container mx-3 mb-3">
+            <div class="d-flex justify-content-between mb-1">
+                <small class="text-muted" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">Progression</small>
+                <small class="text-muted" id="progress-text" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">0%</small>
+            </div>
+            <div class="progress" style="height: 6px;">
+                <div id="game-progress" class="progress-bar" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State Message -->
+    <div id="empty-state" class="empty-state text-center py-5 d-none">
+        <div class="empty-icon mb-3">
+            <i class="bi bi-check-all display-1 text-success"></i>
+        </div>
+        <h4 class="mb-2">Toute liaison! 🎉</h4>
+        <p class="text-muted mb-4">Bon travail! Vous avez fini toutes les cartes.</p>
+        <button onclick="newGame()" class="btn btn-primary">
+            <i class="bi bi-play-circle me-2"></i> Jouer à nouveau
+        </button>
+    </div>
+
+    <!-- Mobile Floating Action Button -->
+    <div class="mobile-fab d-md-none">
+        <div class="btn-group dropup">
+            <button type="button" class="btn btn-primary rounded-circle fab-btn" data-bs-toggle="dropdown">
+                <i class="bi bi-plus"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <button class="dropdown-item" onclick="newGame()">
+                        <i class="bi bi-arrow-repeat me-2"></i> Nouveau jeux
+                    </button>
+                </li>
+                <li>
+                    <button class="dropdown-item" onclick="useHint()">
+                        <i class="bi bi-lightbulb me-2"></i> Utiliser une indice
+                    </button>
+                </li>
+                <li>
+                    <button class="dropdown-item" onclick="clearSelection()">
+                        <i class="bi bi-x-circle me-2"></i> Récommencer la séléction
+                    </button>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <a class="dropdown-item" href="{% url 'quizlet_copy:study' set.pk %}">
+                        <i class="bi bi-arrow-left me-2"></i> Rétour à l'apprentissage
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Completion Modal -->
+<div class="modal fade" id="completionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" style="font-size: clamp(1rem, 3.5vw, 1.25rem);">
+                    <i class="bi bi-trophy text-warning me-2"></i>Jeux complète!
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-emoji-smile display-1 text-success"></i>
+                </div>
+                <h4 class="mb-3" style="font-size: clamp(1.1rem, 4vw, 1.5rem);">Excellent! 🎉</h4>
+                <div id="game-stats" class="mb-4"></div>
+                <div class="d-grid gap-2">
+                    <button onclick="playAgain()" class="btn btn-primary py-2">
+                        <i class="bi bi-play-circle me-2"></i> Jouer à nouveau
+                    </button>
+                    <button class="btn btn-outline-primary py-2" data-bs-dismiss="modal">
+                        <i class="bi bi-check-circle me-2"></i> Continuer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Time's Up Modal -->
+<div class="modal fade" id="timeUpModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" style="font-size: clamp(1rem, 3.5vw, 1.25rem);">
+                    <i class="bi bi-clock text-danger me-2"></i>Temps est terminé!
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-hourglass-split display-1 text-danger"></i>
+                </div>
+                <h4 class="mb-3" style="font-size: clamp(1.1rem, 4vw, 1.5rem);">Je vous souhaite bonne chance à la prochaine fois! ⏰</h4>
+                <div id="timeup-stats" class="mb-4"></div>
+                <div class="d-grid gap-2">
+                    <button onclick="tryAgain()" class="btn btn-primary py-2">
+                        <i class="bi bi-arrow-clockwise me-2"></i> Essayer à nouveau
+                    </button>
+                    <button class="btn btn-outline-primary py-2" data-bs-dismiss="modal">
+                        <i class="bi bi-check-circle me-2"></i> Continuer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Mobile-First Match Game Styles */
+    
+    /* Game Header */
+    .game-header {
+        z-index: 1020;
+    }
+    
+    /* Stats Bar */
+    .stats-bar {
+        z-index: 1010;
+    }
+    
+    /* Game Area */
+    .game-area-container {
+        min-height: calc(100vh - 160px);
+        padding-bottom: 80px; /* Space for mobile FAB */
+    }
+    
+    /* Cards Column */
+    .cards-column {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        max-height: 50vh;
+        min-height: 200px;
+        overflow-y: auto;
+        padding: 8px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .cards-column:empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 150px;
+    }
+    
+    .cards-column:empty::before {
+        content: "No cards remaining";
+        color: #6c757d;
+        font-style: italic;
+        text-align: center;
+        padding: 20px;
+    }
+    
+    /* Cards - Mobile Optimized */
+    .match-card {
+        background: white;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        user-select: none;
+        min-height: 80px;
+        font-size: clamp(0.85rem, 2.8vw, 1rem);
+        word-break: break-word;
+        hyphens: auto;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .match-card:hover {
+        border-color: #adb5bd;
+        transform: translateY(-1px);
+    }
+    
+    .match-card.selected {
+        border-color: #0d6efd;
+        background-color: #e7f1ff;
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+    }
+    
+    /* Matched cards - will disappear */
+    .match-card.matched {
+        pointer-events: none;
+        animation: disappearCard 0.5s ease forwards;
+    }
+    
+    /* Incorrect match */
+    .match-card.incorrect {
+        border-color: #dc3545;
+        background-color: #f8d7da;
+        animation: shake 0.5s ease;
+    }
+    
+    /* Match Feedback */
+    .match-feedback {
+        min-height: 30px;
+    }
+    
+    #match-feedback {
+        font-size: clamp(0.9rem, 3vw, 1rem);
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .feedback-success {
+        color: #198754;
+        animation: fadeInUp 0.5s ease;
+    }
+    
+    .feedback-error {
+        color: #dc3545;
+        animation: fadeInUp 0.5s ease;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        background: white;
+        border-radius: 12px;
+        margin: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    /* Mobile FAB */
+    .mobile-fab {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1030;
+    }
+    
+    .fab-btn {
+        width: 56px;
+        height: 56px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    /* Responsive Adjustments */
+    @media (min-width: 768px) {
+        .game-area-container {
+            padding-bottom: 0;
+        }
+        
+        .mobile-fab {
+            display: none;
+        }
+        
+        .cards-column {
+            max-height: 60vh;
+            min-height: 300px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+            padding: 12px;
+        }
+        
+        .match-card {
+            min-height: 100px;
+        }
+    }
+    
+    /* Very small screens */
+    @media (max-width: 576px) {
+        .cards-column {
+            grid-template-columns: 1fr;
+            max-height: 40vh;
+        }
+        
+        .match-card {
+            min-height: 60px;
+            font-size: 0.9rem;
+        }
+    }
+    
+    /* Landscape mode */
+    @media (max-height: 600px) and (orientation: landscape) {
+        .cards-column {
+            max-height: 40vh;
+        }
+        
+        .match-card {
+            min-height: 60px;
+            padding: 8px;
+        }
+    }
+    
+    /* ===== ANIMATIONS ===== */
+    
+    /* Card Disappear Animation */
+    @keyframes disappearCard {
+        0% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.5;
+            transform: scale(0.9);
+        }
+        100% {
+            opacity: 0;
+            transform: scale(0);
+            height: 0;
+            margin: 0;
+            padding: 0;
+            border-width: 0;
+            display: none;
+        }
+    }
+    
+    /* Shake Animation */
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    
+    /* Correct Match Animation */
+    @keyframes correctMatch {
+        0% {
+            transform: scale(1);
+            border-color: #0d6efd;
+        }
+        50% {
+            transform: scale(1.1);
+            border-color: #198754;
+            box-shadow: 0 0 20px rgba(25, 135, 84, 0.4);
+        }
+        100% {
+            transform: scale(1);
+            border-color: #198754;
+        }
+    }
+    
+    .correct-match {
+        animation: correctMatch 0.5s ease;
+    }
+    
+    /* Fade In Up Animation */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hint Animation */
+    .hint-highlight {
+        box-shadow: 0 0 0 3px rgba(13, 202, 240, 0.3) !important;
+        border-color: #0dcaf0 !important;
+        animation: pulseHint 1.5s infinite;
+    }
+    
+    @keyframes pulseHint {
+        0%, 100% { box-shadow: 0 0 0 3px rgba(13, 202, 240, 0.3); }
+        50% { box-shadow: 0 0 0 3px rgba(13, 202, 240, 0.6); }
+    }
+    
+    /* Touch optimizations */
+    @media (hover: none) and (pointer: coarse) {
+        .match-card {
+            min-height: 60px;
+            touch-action: manipulation;
+        }
+        
+        .match-card:active {
+            transform: scale(0.95);
+        }
+        
+        .btn {
+            min-height: 44px;
+        }
+    }
+    
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .game-header, .stats-bar, .selection-indicator {
+            background-color: #212529;
+            border-color: #495057;
+        }
+        
+        .cards-column {
+            background-color: #2d3748;
+            border-color: #4a5568;
+        }
+        
+        .cards-column:empty::before {
+            color: #adb5bd;
+        }
+        
+        .match-card {
+            background-color: #2d3748;
+            border-color: #4a5568;
+            color: #e2e8f0;
+        }
+        
+        .match-card.selected {
+            background-color: #1c2a3a;
+            border-color: #0d6efd;
+        }
+        
+        .match-card.incorrect {
+            background-color: #3a1c1c;
+            border-color: #dc3545;
+        }
+        
+        .instructions-alert {
+            background-color: #1c2a3a;
+            border-color: #0dcaf0;
+            color: #e2e8f0;
+        }
+        
+        .empty-state {
+            background-color: #2d3748;
+        }
+    }
+</style>
+
+<script>
+    // ========== ENHANCED MATCH GAME WITH CARD DISAPPEARANCE ==========
+    
+    // Configuration
+    const CONFIG = {
+        TIME_LIMIT: 60,
+        SCORE_PER_MATCH: 100,
+        SCORE_TIME_BONUS: 5,
+        HINT_PENALTY: 20,
+        START_HINTS: 3,
+        DISAPPEAR_DELAY: 500 // Time before cards disappear (ms)
+    };
+    
+    // Game State
+    let gameState = {
+        cards: [],
+        selectedTerm: null,
+        selectedDefinition: null,
+        matchedPairs: 0,
+        totalPairs: 0,
+        score: 0,
+        timeLeft: CONFIG.TIME_LIMIT,
+        timer: null,
+        isGameActive: false,
+        isPaused: false,
+        hintsLeft: CONFIG.START_HINTS,
+        cardLimit: 8
+    };
+    
+    // Initialize Game
+    async function initGame() {
+        // Reset state
+        resetGameState();
+        
+        // Hide empty state
+        document.getElementById('empty-state').classList.add('d-none');
+        
+        // Get card limit
+        const limitSelect = document.getElementById('card-limit');
+        gameState.cardLimit = parseInt(limitSelect.value) || 8;
+        
+        // Prepare cards
+        const allCards = [
+            {% for card in cards %}
+                {
+                    id: {{ card.id }},
+                    terme: `{{ card.term|escapejs }}`,
+                    définition: `{{ card.definition|escapejs }}`
+                }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        // Limit cards for better mobile experience
+        let gameCards;
+        if (allCards.length <= gameState.cardLimit) {
+            gameCards = [...allCards];
+        } else {
+            // Select random subset
+            const shuffled = [...allCards].sort(() => Math.random() - 0.5);
+            gameCards = shuffled.slice(0, gameState.cardLimit);
+        }
+        
+        gameState.totalPairs = gameCards.length;
+        
+        // Create card objects
+        gameState.cards = gameCards.map(card => ({
+            id: card.id,
+            term: {
+                id: `term_${card.id}`,
+                content: card.term,
+                matched: false,
+                element: null
+            },
+            definition: {
+                id: `def_${card.id}`,
+                content: card.definition,
+                matched: false,
+                element: null
+            }
+        }));
+        
+        // Update UI
+        updateGameInfo();
+        renderCards();
+        updateProgress();
+        
+        // Enable start button
+        document.getElementById('start-btn').disabled = false;
+    }
+    
+    function resetGameState() {
+        gameState = {
+            cards: [],
+            selectedTerm: null,
+            selectedDefinition: null,
+            matchedPairs: 0,
+            totalPairs: 0,
+            score: 0,
+            timeLeft: CONFIG.TIME_LIMIT,
+            timer: null,
+            isGameActive: false,
+            isPaused: false,
+            hintsLeft: CONFIG.START_HINTS,
+            cardLimit: 8
+        };
+        
+        // Update UI
+        document.getElementById('timer').textContent = CONFIG.TIME_LIMIT;
+        document.getElementById('score').textContent = '0';
+        document.getElementById('matches').textContent = '0/0';
+        document.getElementById('hint-count').textContent = CONFIG.START_HINTS;
+        document.getElementById('game-progress').style.width = '0%';
+        document.getElementById('progress-text').textContent = '0%';
+        document.getElementById('selection-indicator').classList.add('d-none');
+        
+        // Clear feedback
+        document.getElementById('match-feedback').textContent = '';
+        document.getElementById('match-feedback').className = '';
+    }
+    
+    function renderCards() {
+        const termsColumn = document.getElementById('terms-column');
+        const definitionsColumn = document.getElementById('definitions-column');
+        
+        termsColumn.innerHTML = '';
+        definitionsColumn.innerHTML = '';
+        
+        // Filter out matched cards
+        const unmatchedTerms = gameState.cards
+            .filter(c => !c.term.matched)
+            .map(c => ({...c.term, cardId: c.id}));
+        
+        const unmatchedDefs = gameState.cards
+            .filter(c => !c.definition.matched)
+            .map(c => ({...c.definition, cardId: c.id}));
+        
+        // Shuffle remaining cards
+        shuffleArray(unmatchedTerms);
+        shuffleArray(unmatchedDefs);
+        
+        // Create term cards
+        unmatchedTerms.forEach(term => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'match-card';
+            cardDiv.dataset.id = term.id;
+            cardDiv.dataset.cardId = term.cardId;
+            cardDiv.dataset.type = 'term';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'card-content';
+            contentDiv.textContent = term.content;
+            cardDiv.appendChild(contentDiv);
+            
+            cardDiv.addEventListener('click', () => selectCard(term.cardId, 'term', cardDiv));
+            
+            termsColumn.appendChild(cardDiv);
+            
+            // Store reference
+            const cardObj = gameState.cards.find(c => c.id === term.cardId);
+            if (cardObj) {
+                cardObj.term.element = cardDiv;
+            }
+        });
+        
+        // Create definition cards
+        unmatchedDefs.forEach(def => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'match-card';
+            cardDiv.dataset.id = def.id;
+            cardDiv.dataset.cardId = def.cardId;
+            cardDiv.dataset.type = 'definition';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'card-content';
+            contentDiv.textContent = def.content;
+            cardDiv.appendChild(contentDiv);
+            
+            cardDiv.addEventListener('click', () => selectCard(def.cardId, 'definition', cardDiv));
+            
+            definitionsColumn.appendChild(cardDiv);
+            
+            // Store reference
+            const cardObj = gameState.cards.find(c => c.id === def.cardId);
+            if (cardObj) {
+                cardObj.definition.element = cardDiv;
+            }
+        });
+        
+        // Check if columns are empty (all cards matched)
+        if (unmatchedTerms.length === 0 && unmatchedDefs.length === 0) {
+            showEmptyState();
+        }
+        
+        updateColumnProgress();
+    }
+    
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+    
+    function selectCard(cardId, type, element) {
+        if (!gameState.isGameActive || gameState.isPaused) return;
+        
+        // Clear previous selection of same type
+        if (type === 'term') {
+            if (gameState.selectedTerm === element) {
+                // Deselect if clicking same card
+                gameState.selectedTerm.classList.remove('selected');
+                gameState.selectedTerm = null;
+            } else {
+                if (gameState.selectedTerm) {
+                    gameState.selectedTerm.classList.remove('selected');
+                }
+                gameState.selectedTerm = element;
+                element.classList.add('selected');
+            }
+        } else if (type === 'definition') {
+            if (gameState.selectedDefinition === element) {
+                // Deselect if clicking same card
+                gameState.selectedDefinition.classList.remove('selected');
+                gameState.selectedDefinition = null;
+            } else {
+                if (gameState.selectedDefinition) {
+                    gameState.selectedDefinition.classList.remove('selected');
+                }
+                gameState.selectedDefinition = element;
+                element.classList.add('selected');
+            }
+        }
+        
+        // Update selection display
+        updateSelectionDisplay();
+        
+        // Check for match if both are selected
+        if (gameState.selectedTerm && gameState.selectedDefinition) {
+            checkMatch();
+        }
+    }
+    
+    function checkMatch() {
+        const termCardId = parseInt(gameState.selectedTerm.dataset.cardId);
+        const defCardId = parseInt(gameState.selectedDefinition.dataset.cardId);
+        
+        if (termCardId === defCardId) {
+            // Correct match
+            handleCorrectMatch(termCardId);
+        } else {
+            // Incorrect match
+            handleIncorrectMatch();
+        }
+    }
+    
+    function handleCorrectMatch(cardId) {
+        // Update game state
+        gameState.matchedPairs++;
+        gameState.score += CONFIG.SCORE_PER_MATCH;
+        
+        const card = gameState.cards.find(c => c.id === cardId);
+        if (card) {
+            card.term.matched = true;
+            card.definition.matched = true;
+        }
+        
+        // Visual feedback - success animation
+        gameState.selectedTerm.classList.add('correct-match');
+        gameState.selectedDefinition.classList.add('correct-match');
+        
+        // Show success message
+        showFeedback('✅ Liaison correcte!', 'success');
+        
+        // Mark cards for removal
+        gameState.selectedTerm.classList.add('matched');
+        gameState.selectedDefinition.classList.add('matched');
+        
+        // Remove cards after animation
+        setTimeout(() => {
+            // Clear selection
+            gameState.selectedTerm = null;
+            gameState.selectedDefinition = null;
+            updateSelectionDisplay();
+            
+            // Re-render columns to remove matched cards
+            renderCards();
+            
+            // Update stats
+            updateStats();
+            updateProgress();
+            
+            // Check for game completion
+            if (gameState.matchedPairs === gameState.totalPairs) {
+                endGame(true);
+            }
+        }, CONFIG.DISAPPEAR_DELAY);
+    }
+    
+    function handleIncorrectMatch() {
+        // Show error message
+        showFeedback('❌ Fausse liaison, essayer encore!', 'error');
+        
+        // Visual feedback - shake animation
+        gameState.selectedTerm.classList.add('incorrect');
+        gameState.selectedDefinition.classList.add('incorrect');
+        
+        // Small score penalty
+        gameState.score = Math.max(0, gameState.score - 10);
+        
+        // Clear selection after delay
+        setTimeout(() => {
+            gameState.selectedTerm.classList.remove('selected', 'incorrect');
+            gameState.selectedDefinition.classList.remove('selected', 'incorrect');
+            gameState.selectedTerm = null;
+            gameState.selectedDefinition = null;
+            updateSelectionDisplay();
+            updateStats();
+        }, 1000);
+    }
+    
+    function showFeedback(message, type) {
+        const feedback = document.getElementById('match-feedback');
+        feedback.textContent = message;
+        feedback.className = `feedback-${type}`;
+        
+        // Clear feedback after 2 seconds
+        setTimeout(() => {
+            feedback.textContent = '';
+            feedback.className = '';
+        }, 2000);
+    }
+    
+    function showEmptyState() {
+        document.getElementById('empty-state').classList.remove('d-none');
+    }
+    
+    function updateSelectionDisplay() {
+        const indicator = document.getElementById('selection-indicator');
+        const termDisplay = document.getElementById('selected-term');
+        const defDisplay = document.getElementById('selected-definition');
+        
+        if (gameState.selectedTerm || gameState.selectedDefinition) {
+            indicator.classList.remove('d-none');
+        } else {
+            indicator.classList.add('d-none');
+        }
+        
+        if (gameState.selectedTerm) {
+            const card = gameState.cards.find(c => 
+                c.term.element === gameState.selectedTerm
+            );
+            if (card) {
+                termDisplay.textContent = card.term.content;
+            }
+        } else {
+            termDisplay.innerHTML = '<em class="text-muted">Tap a term</em>';
+        }
+        
+        if (gameState.selectedDefinition) {
+            const card = gameState.cards.find(c => 
+                c.definition.element === gameState.selectedDefinition
+            );
+            if (card) {
+                defDisplay.textContent = card.definition.content;
+            }
+        } else {
+            defDisplay.innerHTML = '<em class="text-muted">Tap a definition</em>';
+        }
+    }
+    
+    function clearSelection() {
+        if (gameState.selectedTerm) {
+            gameState.selectedTerm.classList.remove('selected');
+            gameState.selectedTerm = null;
+        }
+        if (gameState.selectedDefinition) {
+            gameState.selectedDefinition.classList.remove('selected');
+            gameState.selectedDefinition = null;
+        }
+        updateSelectionDisplay();
+    }
+    
+    function updateStats() {
+        document.getElementById('score').textContent = gameState.score;
+        document.getElementById('matches').textContent = 
+            `${gameState.matchedPairs}/${gameState.totalPairs}`;
+        document.getElementById('hint-count').textContent = gameState.hintsLeft;
+    }
+    
+    function updateColumnProgress() {
+        const matchedTerms = gameState.cards.filter(c => c.term.matched).length;
+        const matchedDefs = gameState.cards.filter(c => c.definition.matched).length;
+        
+        document.getElementById('terms-progress').textContent = 
+            `${matchedTerms}/${gameState.totalPairs}`;
+        document.getElementById('definitions-progress').textContent = 
+            `${matchedDefs}/${gameState.totalPairs}`;
+    }
+    
+    function updateProgress() {
+        const progress = (gameState.matchedPairs / gameState.totalPairs) * 100;
+        const progressBar = document.getElementById('game-progress');
+        
+        progressBar.style.width = `${progress}%`;
+        document.getElementById('progress-text').textContent = `${Math.round(progress)}%`;
+        
+        // Update color based on progress
+        if (progress >= 75) {
+            progressBar.className = 'progress-bar bg-success';
+        } else if (progress >= 50) {
+            progressBar.className = 'progress-bar bg-info';
+        } else if (progress >= 25) {
+            progressBar.className = 'progress-bar bg-warning';
+        } else {
+            progressBar.className = 'progress-bar bg-primary';
+        }
+    }
+    
+    function updateGameInfo() {
+        document.getElementById('game-info').textContent = 
+            `${gameState.totalPairs} pairs`;
+    }
+    
+    // Game Controls
+    function startGame() {
+        if (!gameState.isGameActive) {
+            gameState.isGameActive = true;
+            gameState.timeLeft = CONFIG.TIME_LIMIT;
+            
+            // Start timer
+            gameState.timer = setInterval(() => {
+                if (!gameState.isPaused) {
+                    gameState.timeLeft--;
+                    document.getElementById('timer').textContent = gameState.timeLeft;
+                    
+                    // Update timer color
+                    const timerEl = document.getElementById('timer');
+                    if (gameState.timeLeft <= 10) {
+                        timerEl.className = 'stat-value fw-bold text-danger';
+                    } else if (gameState.timeLeft <= 30) {
+                        timerEl.className = 'stat-value fw-bold text-warning';
+                    }
+                    
+                    if (gameState.timeLeft <= 0) {
+                        endGame(false);
+                    }
+                }
+            }, 1000);
+            
+            // Update UI
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('pause-btn').disabled = false;
+            document.getElementById('hint-btn').disabled = false;
+            document.getElementById('pause-btn').innerHTML = 
+                '<i class="bi bi-pause-fill me-1"></i><span class="d-none d-sm-inline">Pause</span>';
+        }
+    }
+    
+    function pauseGame() {
+        if (!gameState.isGameActive) return;
+        
+        gameState.isPaused = !gameState.isPaused;
+        
+        if (gameState.isPaused) {
+            document.getElementById('pause-btn').innerHTML = 
+                '<i class="bi bi-play-fill me-1"></i><span class="d-none d-sm-inline">Resume</span>';
+        } else {
+            document.getElementById('pause-btn').innerHTML = 
+                '<i class="bi bi-pause-fill me-1"></i><span class="d-none d-sm-inline">Pause</span>';
+        }
+    }
+    
+    function useHint() {
+        if (!gameState.isGameActive || gameState.isPaused || gameState.hintsLeft <= 0) return;
+        
+        gameState.hintsLeft--;
+        gameState.score = Math.max(0, gameState.score - CONFIG.HINT_PENALTY);
+        
+        // Find an unmatched pair
+        const unmatched = gameState.cards.filter(c => !c.term.matched);
+        if (unmatched.length === 0) return;
+        
+        const randomCard = unmatched[Math.floor(Math.random() * unmatched.length)];
+        
+        // Highlight the pair if they exist in DOM
+        if (randomCard.term.element) {
+            randomCard.term.element.classList.add('hint-highlight');
+        }
+        if (randomCard.definition.element) {
+            randomCard.definition.element.classList.add('hint-highlight');
+        }
+        
+        // Remove highlight after 3 seconds
+        setTimeout(() => {
+            if (randomCard.term.element) {
+                randomCard.term.element.classList.remove('hint-highlight');
+            }
+            if (randomCard.definition.element) {
+                randomCard.definition.element.classList.remove('hint-highlight');
+            }
+        }, 3000);
+        
+        updateStats();
+    }
+    
+    function endGame(isComplete) {
+        clearInterval(gameState.timer);
+        gameState.isGameActive = false;
+        
+        // Add time bonus if game was completed
+        if (isComplete) {
+            gameState.score += gameState.timeLeft * CONFIG.SCORE_TIME_BONUS;
+        }
+        
+        // Show appropriate modal
+        setTimeout(() => {
+            if (isComplete) {
+                showCompletionModal();
+            } else {
+                showTimeUpModal();
+            }
+        }, 500);
+    }
+    
+    function showCompletionModal() {
+        const statsHTML = `
+            <div class="game-stats">
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h3 class="fw-bold">${gameState.score}</h3>
+                            <p class="small text-muted mb-0">Score finale</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h3 class="fw-bold">${gameState.timeLeft}s</h3>
+                            <p class="small text-muted mb-0">Temps restant</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h3 class="fw-bold">${gameState.matchedPairs}/${gameState.totalPairs}</h3>
+                            <p class="small text-muted mb-0">Liaisons</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h3 class="fw-bold">100%</h3>
+                            <p class="small text-muted mb-0">Précision</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('game-stats').innerHTML = statsHTML;
+        
+        const modal = new bootstrap.Modal(document.getElementById('completionModal'));
+        modal.show();
+    }
+    
+    function showTimeUpModal() {
+        const statsHTML = `
+            <div class="game-stats">
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h3 class="fw-bold">${gameState.score}</h3>
+                            <p class="small text-muted mb-0">Score finale</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h3 class="fw-bold">${gameState.matchedPairs}/${gameState.totalPairs}</h3>
+                            <p class="small text-muted mb-0">Nombre de paire</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('timeup-stats').innerHTML = statsHTML;
+        
+        const modal = new bootstrap.Modal(document.getElementById('timeUpModal'));
+        modal.show();
+    }
+    
+    function newGame() {
+        initGame();
+    }
+    
+    function resetGame() {
+        if (confirm('Si vous récommencez le jeux, votre progression sera perdu')) {
+            clearInterval(gameState.timer);
+            initGame();
+        }
+    }
+    
+    function playAgain() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('completionModal'));
+        if (modal) modal.hide();
+        
+        setTimeout(() => {
+            resetGame();
+            startGame();
+        }, 300);
+    }
+    
+    function tryAgain() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('timeUpModal'));
+        if (modal) modal.hide();
+        
+        setTimeout(() => {
+            resetGame();
+            startGame();
+        }, 300);
+    }
+    
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', function() {
+        initGame();
+        
+        // Card limit change handler
+        document.getElementById('card-limit').addEventListener('change', function() {
+            if (!gameState.isGameActive) {
+                initGame();
+            } else {
+                if (confirm('Changer le nombre limite de la carte récommence le jeux, voulez-vous continuer?')) {
+                    initGame();
+                }
+            }
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (document.activeElement.tagName === 'INPUT' || 
+                document.activeElement.tagName === 'TEXTAREA') {
+                return;
+            }
+            
+            switch(e.key) {
+                case ' ':
+                    e.preventDefault();
+                    if (gameState.selectedTerm && gameState.selectedDefinition) {
+                        checkMatch();
+                    }
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    clearSelection();
+                    break;
+                case 'h':
+                case 'H':
+                    e.preventDefault();
+                    useHint();
+                    break;
+                case 'p':
+                case 'P':
+                    e.preventDefault();
+                    pauseGame();
+                    break;
+                case 's':
+                case 'S':
+                    if (!gameState.isGameActive) {
+                        e.preventDefault();
+                        startGame();
+                    }
+                    break;
+            }
+        });
+        
+        // Touch optimizations
+        if ('ontouchstart' in window) {
+            // Prevent long press context menu
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            });
+        }
+    });
+</script>
+{% endblock %}

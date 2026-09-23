@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}Edit {{ object.title }}{% else %}Create New Set{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>{% if object %}Edit Set{% else %}Create New Flashcard Set{% endif %}</h3>
+            </div>
+           {% comment %} <div class="card-body">
+                 <form method="POST">
+                    {% csrf_token %}
+                    
+                    {{ form }}
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% if object %}{% url 'quizlet_copy:set-detail' object.pk %}{% else %}{% url 'quizlet_copy:my-sets' %}{% endif %}" 
+                           class="btn btn-secondary">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if object %}Update Set{% else %}Create Set{% endif %}
+                        </button>
+                    </div>
+                </form> {% endcomment %}
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_title" class="form-label">Title *</label>
+                        <input type="text" name="title" class="form-control" id="id_title" 
+                               value="{{ form.title.value|default:'' }}" required 
+                               placeholder="e.g., Spanish Vocabulary, Biology Terms">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">Description</label>
+                        <textarea name="description" class="form-control" id="id_description" 
+                                  rows="3" placeholder="Describe what this set is about...">{{ form.description.value|default:'' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="is_public" class="form-check-input" id="id_is_public"
+                               {% if form.is_public.value %}checked{% endif %}>
+                        <label class="form-check-label" for="id_is_public">
+                            Make this set public (others can see and study it)
+                        </label>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% if object %}{% url 'quizlet_copy:set-detail' object.pk %}{% else %}{% url 'quizlet_copy:my-sets' %}{% endif %}" 
+                           class="btn btn-secondary">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if object %}Update Set{% else %}Create Set{% endif %}
+                        </button>
+                    </div>
+                </form> 
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
