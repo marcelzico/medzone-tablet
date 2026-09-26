@@ -706,3 +706,4 @@ def create_set_chapter_public (request, chapter_id):
     return redirect ('lecon:chapter_detail', subject_pk=chapter.ue.id, chapter_pk=chapter.id)
 
 
+ 
