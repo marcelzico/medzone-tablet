@@ -298,7 +298,7 @@
     {% endif %}
 
     <!-- All Private Flashcards Section - ✅ Fixed variable name -->
-    {% comment %} {% if flashcard_sets_private.exists %}
+    {% if flashcard_sets_private.exists %}
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-purple text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
@@ -347,7 +347,7 @@
             </div>
         </div>
     </div>
-    {% endcomment %}
+    
 
     <!-- All Public Flashcards Section - ✅ Fixed variable name -->
     {% if can_view_flashcards and flashcard_sets_public.exists %}
