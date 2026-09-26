@@ -367,7 +367,7 @@
     {% endif %}
 
     <!-- All Private Flashcards Section -->
-    {% comment %} {% if all_flashcard_sets_private.exists %}
+    {% if all_flashcard_sets_private.exists %}
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-purple text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
@@ -424,7 +424,7 @@
             </div>
         </div>
     </div>
-    {% endif %} {% endcomment %}
+    {% endif %}
 
     <!-- All Public Flashcards Section -->
     {% if all_flashcard_sets_public.exists %}
