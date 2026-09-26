@@ -350,7 +350,7 @@
     {% endcomment %}
 
     <!-- All Public Flashcards Section - ✅ Fixed variable name -->
-    {% comment %} {% if can_view_flashcards and flashcard_sets_public.exists %}
+    {% if can_view_flashcards and flashcard_sets_public.exists %}
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-purple text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
@@ -393,7 +393,7 @@
             </div>
         </div>
     </div>
-    {% endif %} {% endcomment %}
+    {% endif %} 
 
     <!-- Chapters Section - ✅ Fixed to use 'chapters' queryset directly -->
     <div class="card shadow-sm">
